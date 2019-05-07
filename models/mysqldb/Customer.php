@@ -26,8 +26,8 @@ use yii\web\IdentityInterface;
  * @property int $created_at
  * @property int $updated_at
  * @property string $password write-only password
- */
-/**
+ * @property int $access_token_created_at
+ *
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
@@ -38,7 +38,7 @@ class Customer extends ActiveRecord implements IdentityInterface
 
     public static function tableName()
     {
-        return 'customer';
+        return '{{%customer}}';
     }
 
     public function rules()
@@ -50,24 +50,26 @@ class Customer extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @param $id | Int , 用户id
+     * 通过id 找到identity（状态有效）
      */
-    // 通过id 找到identity
     public static function findIdentity($id)
     {
         return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
     }
 
     /**
-     * {@inheritdoc}
+     * @param $token | String
+     * 通过access_token 找到identity
      */
-    // 通过access_token 找到identity
     public static function findIdentityByAccessToken($token, $type = null)
     {
         return static::findOne(['access_token' => $token, 'status' => self::STATUS_ACTIVE]);
     }
 
-    // 生成access_token
+    /**
+     * 生成access_token
+     */
     public function generateAccessToken()
     {
         $this->access_token = Yii::$app->security->generateRandomString();
@@ -87,10 +89,9 @@ class Customer extends ActiveRecord implements IdentityInterface
     /**
      * Finds user by password reset token.
      *
-     * @param  string      $token password reset token
+     * @param string $token password reset token
      * @return static|null
      */
-    // 此处是忘记密码所使用的
     public static function findByPasswordResetToken($token)
     {
         if (!static::isPasswordResetTokenValid($token)) {
@@ -163,7 +164,7 @@ class Customer extends ActiveRecord implements IdentityInterface
      */
     public function setPassword($password)
     {
-        $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+        $this->password_hash = Yii::$app->security->generatePasswordHash($password, 6);
     }
 
     /**

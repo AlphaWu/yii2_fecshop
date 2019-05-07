@@ -13,6 +13,7 @@ return [
             'ar' => [
                 'class' => 'fecshop\services\helper\AR',
             ],
+            /* 已经废除，现在使用Yii::$app->serviceLog
             'log' => [
                 'class' => 'fecshop\services\helper\Log',
                 'log_config' => [
@@ -34,8 +35,12 @@ return [
                     ],
                 ],
             ],
+            */
             'errors' => [
                 'class' => 'fecshop\services\helper\Errors',
+            ],
+            'errorHandler' => [
+                'class' => 'fecshop\services\helper\ErrorHandler',
             ],
             'mobileDetect' => [
                 'class' => 'fecshop\services\helper\MobileDetect',
@@ -57,6 +62,15 @@ return [
             'format' => [
                 'class' => 'fecshop\services\helper\Format',
                 //'default_country' => 'US',
+            ],
+            'appserver' => [
+                'class' => 'fecshop\services\helper\Appserver',
+            ],
+            'appapi' => [
+                'class' => 'fecshop\services\helper\Appapi',
+            ],
+            'echart' => [
+                'class' => 'fecshop\services\helper\Echart',
             ],
         ],
     ],

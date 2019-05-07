@@ -24,38 +24,45 @@ class ProductController extends AppfrontController
         Yii::$service->page->theme->layoutFile = 'product_view.php';
     }
 
-    // 网站信息管理
+    // 产品详细页面
     public function actionIndex()
     {
-        //$data = Yii::$service->product->apicoll();
-        //var_dump($data);
-        //echo 1;exit;
         $data = $this->getBlock()->getLastData();
-
-        return $this->render($this->action->id, $data);
+        if(is_array($data)){
+            return $this->render($this->action->id, $data);
+        }
     }
-
+    /**
+     * Yii2 behaviors 可以参看地址：http://www.yiichina.com/doc/guide/2.0/concept-behaviors
+     * 这里的行为的作用为添加page cache（整页缓存）。
+     */
     public function behaviors()
     {
+        if (Yii::$service->store->isAppServerMobile()) {
+            $primaryKey = Yii::$service->product->getPrimaryKey();
+            $primaryVal = Yii::$app->request->get($primaryKey);
+            $urlPath = 'catalog/product/'.$primaryVal;
+            Yii::$service->store->redirectAppServerMobile($urlPath);
+        }
+        $behaviors = parent::behaviors();
         $primaryKey = Yii::$service->product->getPrimaryKey();
         $product_id = Yii::$app->request->get($primaryKey);
         $cacheName = 'product';
         if (Yii::$service->cache->isEnable($cacheName)) {
             $timeout = Yii::$service->cache->timeout($cacheName);
-            $disableUrlParam = Yii::$service->cache->timeout($cacheName);
+            $disableUrlParam = Yii::$service->cache->disableUrlParam($cacheName);
             $cacheUrlParam = Yii::$service->cache->cacheUrlParam($cacheName);
             $get_str = '';
             $get = Yii::$app->request->get();
             // 存在无缓存参数，则关闭缓存
             if (isset($get[$disableUrlParam])) {
-                return [
-                    [
-                        'enabled' => false,
-                        'class' => 'yii\filters\PageCache',
-                        'only' => ['index'],
-
-                    ],
+                $behaviors[] =  [
+                    'enabled' => false,
+                    'class' => 'yii\filters\PageCache',
+                    'only' => ['index'],
                 ];
+                
+                return $behaviors;
             }
             if (is_array($get) && !empty($get) && is_array($cacheUrlParam)) {
                 foreach ($get as $k=>$v) {
@@ -69,24 +76,22 @@ class ProductController extends AppfrontController
             $store = Yii::$service->store->currentStore;
             $currency = Yii::$service->page->currency->getCurrentCurrency();
 
-            return [
-                [
-                    'enabled' => true,
-                    'class' => 'yii\filters\PageCache',
-                    'only' => ['index'],
-                    'duration' => $timeout,
-                    'variations' => [
-                        $store, $currency, $get_str, $product_id,
-                    ],
-                    //'dependency' => [
-                    //	'class' => 'yii\caching\DbDependency',
-                    //	'sql' => 'SELECT COUNT(*) FROM post',
-                    //],
+            $behaviors[] =  [
+                'enabled' => true,
+                'class' => 'yii\filters\PageCache',
+                'only' => ['index'],
+                'duration' => $timeout,
+                'variations' => [
+                    $store, $currency, $get_str, $product_id,
                 ],
+                //'dependency' => [
+                //	'class' => 'yii\caching\DbDependency',
+                //	'sql' => 'SELECT COUNT(*) FROM post',
+                //],
             ];
         }
 
-        return [];
+        return $behaviors;
     }
 
     // ajax 得到产品加入购物车的价格。
@@ -113,9 +118,31 @@ class ProductController extends AppfrontController
             'price_info' => $price_info,
         ];
 
-        echo  json_encode([
+        echo json_encode([
             'price' =>Yii::$service->page->widget->render($priceView, $priceParam),
         ]);
         exit;
     }
+    
+    public function actionImage(){
+        $sku = Yii::$app->request->get('sku');
+        if ($sku) {
+            $product = Yii::$service->product->getBySku($sku);
+            if (isset($product['image']['main']['image'])) {
+                $main_img = $product['image']['main']['image'];
+                $img_type = substr($main_img, strpos($main_img,'.') + 1);
+                $imgDir = Yii::$service->product->image->getResizeDir($main_img, [230, 230]);
+                if (file_exists($imgDir)) {
+                    header('content-type: image/'.$img_type);
+                    echo file_get_contents($imgDir);
+                }
+            }
+        }
+        
+    }
+    
+    
+    
+    
+    
 }

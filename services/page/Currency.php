@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,13 +10,12 @@
 
 namespace fecshop\services\page;
 
-use fec\helpers\CSession;
 use fecshop\services\Service;
 use Yii;
 use yii\base\InvalidConfigException;
 
 /**
- * Currency.
+ * Page Currency services 货币部分
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
@@ -38,28 +38,32 @@ class Currency extends Service
      * ].
      */
     public $currencys;
+
     /**
      * 基础货币，产品的价格，填写的都是基础货币的价格。
      * 该值需要在配置文件中进行配置.
      */
     public $baseCurrecy;
+
     /**
      * 网站的默认货币，需要注意的是，默认货币不要和基础货币混淆，举例：
      * 后台产品统一使用的美元填写产品价格，但是我的网站前端的默认货币为人民币。
      * 该值需要在配置文件中进行配置.
      */
     public $defaultCurrency = 'USD';
+
     /**
      * 当前的货币简码
      */
     protected $_currentCurrencyCode;
+
     /**
      * 根据配置，保存所有货币的配置信息。
      */
     protected $_currencys;
 
     /**
-     * @property $currencyCode | string 货币简码，譬如USD,RMB等
+     * @param $currencyCode | string 货币简码，譬如USD,RMB等
      * @return array
      *               如果不传递参数，得到所有的货币
      *               如果传递参数，得到的是当前货币的信息。
@@ -94,7 +98,7 @@ class Currency extends Service
     }
 
     /**
-     * @property $currencyCode | 货币简码
+     * @param $currencyCode | 货币简码
      * 得到货币的符号，譬如￥ $ 等。
      */
     protected function actionGetSymbol($currencyCode)
@@ -113,11 +117,10 @@ class Currency extends Service
      */
     protected function actionGetCurrentCurrencyPrice($price)
     {
-        if (isset($this->currencys[$this->getCurrentCurrency()]['rate'])) {
-            $rate = $this->currencys[$this->getCurrentCurrency()]['rate'];
-            if ($rate) {
-                return ceil($price * $rate * 100) / 100;
-            }
+        $currencyCode  = $this->getCurrentCurrency();
+        $currencyPrice = $this->getCurrencyPrice($price, $currencyCode);
+        if ($currencyPrice) {
+            return $currencyPrice;
         }
         /*
          * 如果上面出现错误，当前的货币在货币配置中找不到，则会使用默认货币
@@ -129,7 +132,22 @@ class Currency extends Service
     }
 
     /**
-     * @property $current_price | Float 当前货币下的价格
+     * property $price|Float ，默认货币的价格
+     * property $currencyCode|String，货币简码,譬如 USD
+     * 根据基础货币，得到相应货币的价格
+     */
+    protected function actionGetCurrencyPrice($price, $currencyCode)
+    {
+        if (isset($this->currencys[$currencyCode]['rate'])) {
+            $rate = $this->currencys[$currencyCode]['rate'];
+            if ($rate) {
+                return bcmul($price, $rate, 2);
+            }
+        }
+    }
+
+    /**
+     * @param $current_price | Float 当前货币下的价格
      * @return 基础货币下的价格
      *                                  通过当前的货币价格得到基础货币的价格，这是一个反推的过程，
      *                                  需要特别注意的是：这种反推方法换算得到的基础货币的价格，和原来的基础货币价格，
@@ -143,13 +161,13 @@ class Currency extends Service
         if (isset($this->currencys[$current_currency]['rate'])) {
             $rate = $this->currencys[$current_currency]['rate'];
             if ($rate) {
-                return ceil($current_price / $rate * 100) / 100;
+                return bcdiv($current_price, $rate, 2);
             }
         }
     }
 
     /**
-     * @property $currencyCode | 货币简码
+     * @param $currencyCode | 货币简码
      * 初始化货币信息，在service Store bootstrap(Yii::$app->store->bootstrap()), 中会被调用
      * 1. 如果 $this->defaultCurrency 和 $this->baseCurrecy 没有设置，将会报错。
      * 2. 如果 传递参数$currencyCode为空，则会使用默认货币
@@ -171,7 +189,7 @@ class Currency extends Service
     }
 
     /**
-     * @property $currencyCode | String ， 货币简码，如果参数$currencyCode为空，则取当前的货币简码
+     * @param $currencyCode | String ， 货币简码，如果参数$currencyCode为空，则取当前的货币简码
      * @return array
      *               得到货币的详细信息,数据格式如下：
      *               [
@@ -195,14 +213,14 @@ class Currency extends Service
     protected function actionGetCurrentCurrency()
     {
         if (!$this->_currentCurrencyCode) {
-            $this->_currentCurrencyCode = CSession::get(self::CURRENCY_CURRENT);
+            $this->_currentCurrencyCode = Yii::$service->session->get(self::CURRENCY_CURRENT);
         }
 
         return $this->_currentCurrencyCode;
     }
 
     /**
-     * @property $currencyCode | String， 当前的货币简码
+     * @param $currencyCode | String， 当前的货币简码
      * 设置当前的货币。
      */
     protected function actionSetCurrentCurrency($currencyCode)
@@ -211,14 +229,14 @@ class Currency extends Service
             $currencyCode = $this->defaultCurrency;
         }
         if ($currencyCode) {
-            CSession::set(self::CURRENCY_CURRENT, $currencyCode);
-
+            Yii::$service->session->set(self::CURRENCY_CURRENT, $currencyCode);
+            $this->_currentCurrencyCode = $currencyCode;
             return true;
         }
     }
 
     /**
-     * @property $currency | String 货币简码
+     * @param $currency | String 货币简码
      * @return bool
      *              检测当前传递的货币简码，是否在配置中存在，如果存在则返回true
      */
@@ -229,5 +247,10 @@ class Currency extends Service
         } else {
             return false;
         }
+    }
+
+    public function setCurrentCurrency2CNY()
+    {
+        return $this->setCurrentCurrency('CNY');
     }
 }

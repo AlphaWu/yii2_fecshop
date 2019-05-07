@@ -17,28 +17,6 @@ use Yii;
  */
 class Review
 {
-    ///public $_paypal_email;
-    //public $_payer_id;
-    //public $_payer_status;
-    //public $_paypal_first_name;
-    //public $_paypal_last_name;
-    //public $_paypal_country_code;
-    //public $_ship_to_name;
-    //public $_ship_to_street;
-    //public $_ship_to_street2;
-    //public $_ship_to_city;
-    //public $_ship_to_state;
-    //public $_ship_to_zip;
-    //public $_ship_to_country_code;
-    //public $_ship_to_country_name;
-    //public $_address_status;
-    //public $_currency_code;
-
-    //public $_shipping_method;
-
-    //public $_symbols;
-
-    //protected $_address;
     protected $_payment_method;
     protected $_shipping_method;
     protected $_address_view_file;
@@ -64,7 +42,7 @@ class Review
         $this->initCountry();
         $this->initState();
         $shippings = $this->getShippings();
-        $last_cart_info = $this->getCartInfo($this->_shipping_method, $this->_country, $this->_state);
+        $last_cart_info = $this->getCartInfo(true, $this->_shipping_method, $this->_country, $this->_state);
         //echo $this->_address_view_file;exit;
         return [
             'payments'                    => $this->getPayment(),
@@ -244,7 +222,7 @@ class Review
     public function getCartInfo($shipping_method, $country, $state)
     {
         if (!$this->_cart_info) {
-            $cart_info = Yii::$service->cart->getCartInfo($shipping_method, $country, $state);
+            $cart_info = Yii::$service->cart->getCartInfo(true, $shipping_method, $country, $state);
             if (isset($cart_info['products']) && is_array($cart_info['products'])) {
                 foreach ($cart_info['products'] as $k=>$product_one) {
                     // 设置名字，得到当前store的语言名字。
@@ -303,7 +281,7 @@ class Review
     }
 
     /**
-     * @property $current_shipping_method | String  当前选择的货运方式
+     * @param $current_shipping_method | String  当前选择的货运方式
      * @return Array，数据格式为：
      *                                    [
      *                                    'method'=> $method,
@@ -324,18 +302,16 @@ class Review
             $region = $this->_state;
         }
         $cartProductInfo = Yii::$service->cart->quoteItem->getCartProductInfo();
-        //echo $country ;
         $product_weight = $cartProductInfo['product_weight'];
-        // 传递当前的货运方式，这个需要从cart中选取，
-        // 如果cart中没有shipping_method，那么该值为空
-        //var_dump($this->_cart_info);
+        $product_volume_weight = $cartProductInfo['product_volume_weight'];
+        $product_final_weight = max($product_weight, $product_volume_weight);
         $cartShippingMethod = $this->_cart_info['shipping_method'];
-        //echo "$custom_shipping_method,$cartShippingMethod";
-        $current_shipping_method = Yii::$service->shipping->getCurrentShippingMethod($custom_shipping_method, $cartShippingMethod);
-
+        // 当前的货运方式
+        $current_shipping_method = Yii::$service->shipping->getCurrentShippingMethod($custom_shipping_method, $cartShippingMethod, $country, $region, $product_final_weight);
         $this->_shipping_method = $current_shipping_method;
-        $shippingArr = $this->getShippingArr($product_weight, $current_shipping_method, $country, $region);
-
+        // 得到所有，有效的shipping method
+        $shippingArr = $this->getShippingArr($product_final_weight, $current_shipping_method, $country, $region = '*');
+        
         return $shippingArr;
     }
 
@@ -378,27 +354,23 @@ class Review
     }
 
     /**
-     * @property $weight | Float , 总量
-     * @property $shipping_method | String  $shipping_method key
-     * @property $country | String  国家
+     * @param $weight | Float , 总量
+     * @param $shipping_method | String  $shipping_method key
+     * @param $country | String  国家
      * @return array ， 通过上面的三个参数，得到各个运费方式对应的运费等信息。
      */
-    public function getShippingArr($weight, $current_shipping_method, $country, $region = '*')
+    public function getShippingArr($weight, $current_shipping_method, $country, $region)
     {
-        $allshipping = Yii::$service->shipping->getShippingMethod();
+        $available_shipping = Yii::$service->shipping->getAvailableShippingMethods($country, $region, $weight);
         $sr = '';
         $shipping_i = 1;
         $arr = [];
-        if (is_array($allshipping)) {
-            foreach ($allshipping as $method=>$shipping) {
+        if (is_array($available_shipping) && !empty($available_shipping)) {
+            foreach ($available_shipping as $method=>$shipping) {
                 $label = $shipping['label'];
                 $name = $shipping['name'];
                 // 得到运费的金额
-                //echo "$method,$weight,$country,$region";
-                // getShippingCostWithSymbols
-                $cost = Yii::$service->shipping->getShippingCost($method, $weight, $country, $region);
-                //var_dump($cost);
-                //echo "##"
+                $cost = Yii::$service->shipping->getShippingCost($method, $shipping, $weight, $country, $region);
                 $currentCurrencyCost = $cost['currCost'];
                 $symbol = Yii::$service->page->currency->getCurrentSymbol();
                 if ($current_shipping_method == $method) {
@@ -408,30 +380,30 @@ class Review
                 }
                 $arr[] = [
                     'method'    => $method,
-                    'label'    => $label,
-                    'name'    => $name,
-                    'cost'    => $currentCurrencyCost,
+                    'label'     => $label,
+                    'name'      => $name,
+                    'cost'      => $currentCurrencyCost,
                     'symbol'    => $symbol,
-                    'checked'    => $checked,
+                    'checked'   => $checked,
                     'shipping_i'=> $shipping_i,
                 ];
+
                 $shipping_i++;
             }
         }
-
         return $arr;
     }
 
     public function expressReview()
     {
-        $setTokenStatus = Yii::$service->payment->paypal->setExpressToken();
-        $setPayerIDStatus = Yii::$service->payment->paypal->setExpressPayerID();
-        if (!$setTokenStatus) {
+        $getToken = Yii::$service->payment->paypal->getToken();
+        $getPayerID = Yii::$service->payment->paypal->getPayerID();
+        if (!$getToken) {
             Yii::$service->page->message->AddError('paypal express token is empty');
 
             return [];
         }
-        if (!$setPayerIDStatus) {
+        if (!$getPayerID) {
             Yii::$service->page->message->AddError('paypal express PayerID is empty');
 
             return [];
@@ -451,25 +423,6 @@ class Review
      */
     public function setValue($getExpressCheckoutReturn)
     {
-        //var_dump($getExpressCheckoutReturn);
-        /*
-        $this->_paypal_email 			= $GetExpressCheckoutReturn['EMAIL'];
-        $this->_payer_id 				= $GetExpressCheckoutReturn['PAYERID'];
-        $this->_payer_status 			= $GetExpressCheckoutReturn['PAYERSTATUS'];
-        $this->_paypal_first_name 		= $GetExpressCheckoutReturn['FIRSTNAME'];
-        $this->_paypal_last_name 		= $GetExpressCheckoutReturn['LASTNAME'];
-        $this->_paypal_country_code 	= $GetExpressCheckoutReturn['COUNTRYCODE'];
-        //$this->_ship_to_name 			= $GetExpressCheckoutReturn['SHIPTONAME'];
-        $this->_ship_to_street 			= $GetExpressCheckoutReturn['SHIPTOSTREET'];
-        $this->_ship_to_street2 		= $GetExpressCheckoutReturn['SHIPTOSTREET2'];
-        $this->_ship_to_city 			= $GetExpressCheckoutReturn['SHIPTOCITY'];
-        $this->_ship_to_state 			= $GetExpressCheckoutReturn['SHIPTOSTATE'];
-        $this->_ship_to_zip 			= $GetExpressCheckoutReturn['SHIPTOZIP'];
-        $this->_ship_to_country_code 	= $GetExpressCheckoutReturn['SHIPTOCOUNTRYCODE'];
-        $this->_ship_to_country_name 	= $GetExpressCheckoutReturn['SHIPTOCOUNTRYNAME'];
-        $this->_address_status 			= $GetExpressCheckoutReturn['ADDRESSSTATUS'];
-        $this->_currency_code 			= $GetExpressCheckoutReturn['CURRENCYCODE'];
-        */
         if ($getExpressCheckoutReturn['FIRSTNAME']) {
             $this->_address['first_name'] = $getExpressCheckoutReturn['FIRSTNAME'];
         }

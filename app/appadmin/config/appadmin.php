@@ -12,17 +12,31 @@ $modules = [];
 foreach (glob(__DIR__ . '/modules/*.php') as $filename) {
     $modules = array_merge($modules, require($filename));
 }
-
+$params = require __DIR__ .'/params.php';
 return [
     'modules'=>$modules,
     /* only config in front web */
-    //'bootstrap' => ['store'],
+    'bootstrap' => ['store'],
+    'params'    => $params,
     'components' => [
+        'store' => [
+            'appName' => 'appadmin',
+        ],
         'user' => [
-            'identityClass' => 'fecadmin\models\AdminUser',
+            'identityClass' => 'fecshop\models\mysqldb\AdminUser',
             'enableAutoLogin' => true,
         ],
-
+        'i18n' => [
+            'translations' => [
+                'appadmin' => [
+                    //'class' => 'yii\i18n\PhpMessageSource',
+                    'class' => 'fecshop\yii\i18n\PhpMessageSource',
+                    'basePaths' => [
+                        '@fecshop/app/appadmin/languages',
+                    ],
+                ],
+            ],
+        ],
         'errorHandler' => [
             'errorAction' => 'fecadmin/error',
         ],
@@ -33,7 +47,5 @@ return [
             ],
         ],
     ],
-    'params' => [
-        'appName' => 'appadmin',
-    ],
+    
 ];

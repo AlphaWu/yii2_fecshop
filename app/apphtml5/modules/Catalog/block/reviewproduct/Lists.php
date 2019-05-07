@@ -9,7 +9,7 @@
 
 namespace fecshop\app\apphtml5\modules\Catalog\block\reviewproduct;
 
-use fecshop\app\apphtml5\modules\Catalog\helpers\Review as ReviewHelper;
+//use fecshop\app\apphtml5\modules\Catalog\helpers\Review as ReviewHelper;
 use Yii;
 
 /**
@@ -23,31 +23,46 @@ class Lists
     public $filterBySpu = true;
     public $filterOrderBy = 'review_date';
     public $_page = 'p';
-    public $numPerPage = 20;
+    public $numPerPage = 10;
     public $pageNum;
-
+    /**
+     * 为了可以使用rewriteMap，use 引入的文件统一采用下面的方式，通过Yii::mapGet()得到className和Object
+     */
+    protected $_reviewHelperName = '\fecshop\app\apphtml5\modules\Catalog\helpers\Review';
+    protected $_reviewHelper;
+    
     public function __construct()
     {
-        ReviewHelper::initReviewConfig();
+        /**
+         * 通过Yii::mapGet() 得到重写后的class类名以及对象。Yii::mapGet是在文件@fecshop\yii\Yii.php中
+         */
+        list($this->_reviewHelperName,$this->_reviewHelper) = Yii::mapGet($this->_reviewHelperName);  
+        // 初始化服务
+        $reviewHelper = $this->_reviewHelper;
+        $reviewHelper::initReviewConfig();
     }
-
+    /**
+     * @param $countTotal | Int
+     * 得到toolbar的分页部分
+     */
     protected function getProductPage($countTotal)
     {
         if ($countTotal <= $this->numPerPage) {
+            //echo "$countTotal <= $this->numPerPage";
             return '';
         }
         $config = [
-            'class'        => 'fecshop\app\apphtml5\widgets\Page',
-            'view'        => 'widgets/page.php',
-            'pageNum'        => $this->pageNum,
-            'numPerPage'    => $this->numPerPage,
-            'countTotal'    => $countTotal,
-            'page'            => $this->_page,
+            'class'      => 'fecshop\app\apphtml5\widgets\Page',
+            'view'       => 'widgets/page.php',
+            'pageNum'    => $this->pageNum,
+            'numPerPage' => $this->numPerPage,
+            'countTotal' => $countTotal,
+            'page'       => $this->_page,
         ];
 
         return Yii::$service->page->widget->renderContent('category_product_page', $config);
     }
-
+    // 初始化参数
     public function initParam()
     {
         $this->pageNum = Yii::$app->request->get($this->_page);
@@ -84,45 +99,53 @@ class Lists
 
             $pageToolBar = $this->getProductPage($count);
             $coll = $data['coll'];
-            $ReviewAndStarCount = ReviewHelper::getReviewAndStarCount($product);
-            list($review_count, $reviw_rate_star_average) = $ReviewAndStarCount;
+            $reviewHelper = $this->_reviewHelper;
+            $ReviewAndStarCount = $reviewHelper::getReviewAndStarCount($product);
+            list($review_count, $reviw_rate_star_average, $reviw_rate_star_info)  = $ReviewAndStarCount;
 
             return [
                 '_id' => $this->product_id,
                 'spu' => $this->spu,
-                'review_count'                => $review_count,
-                'reviw_rate_star_average'    => $reviw_rate_star_average,
-                'pageToolBar'    => $pageToolBar,
-                'coll'            => $coll,
-                'noActiveStatus'=> Yii::$service->product->review->noActiveStatus(),
-                'addReviewUrl'    => $addReviewUrl,
-                'name'            => $name,
-                'price_info'    => $price_info,
-                'main_img'        => $main_img,
-                'editForm'        => $editForm,
-                'url'        => Yii::$service->url->getUrl($url_key),
+                'review_count'             => $review_count,
+                'reviw_rate_star_average'  => $reviw_rate_star_average,
+                'reviw_rate_star_info'     => $reviw_rate_star_info,
+                'pageToolBar'       => $pageToolBar,
+                'coll'              => $coll,
+                'noActiveStatus'    => Yii::$service->product->review->noActiveStatus(),
+                'addReviewUrl'      => $addReviewUrl,
+                'name'              => $name,
+                'price_info'        => $price_info,
+                'main_img'          => $main_img,
+                'editForm'          => $editForm,
+                'url'               => Yii::$service->url->getUrl($url_key),
             ];
         }
     }
-
+    /**
+     * @param $spu  | String
+     * 通过spu得到产品评论
+     */
     public function getReviewsBySpu($spu)
     {
         $currentIp = \fec\helpers\CFunc::get_real_ip();
+        $lang_code = Yii::$service->store->currentLangCode;
         $filter = [
-            'numPerPage'    => $this->numPerPage,
-            'pageNum'        => $this->pageNum,
+            'numPerPage' => $this->numPerPage,
+            'pageNum'    => $this->pageNum,
             'orderBy'    => [$this->filterOrderBy => SORT_DESC],
-            'where'            => [
+            'where'      => [
                 [
                     '$or' => [
                         [
                             'status' => Yii::$service->product->review->activeStatus(),
                             'product_spu' => $spu,
+                            'lang_code' => $lang_code
                         ],
                         [
                             'status' => Yii::$service->product->review->noActiveStatus(),
                             'product_spu' => $spu,
                             'ip' => $currentIp,
+                            'lang_code' => $lang_code
                         ],
                     ],
                 ],
@@ -131,7 +154,7 @@ class Lists
 
         return Yii::$service->product->review->getListBySpu($filter);
     }
-
+    // 产品价格信息
     protected function getProductPriceInfo($product)
     {
         $price = $product['price'];

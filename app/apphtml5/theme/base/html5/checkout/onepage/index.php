@@ -1,13 +1,25 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+use fec\helpers\CRequest;
+?>
 <div class="main container one-column">
 	<div class="col-main">
 		<?= Yii::$service->page->widget->render('flashmessage'); ?>
 		<form action="<?= Yii::$service->url->getUrl('checkout/onepage'); ?>" method="post" id="onestepcheckout-form">
-			<?= \fec\helpers\CRequest::getCsrfInputHtml(); ?>
+			<?= CRequest::getCsrfInputHtml(); ?>
 			<div style="margin: 0;" class="group-select">
 				<p class="onestepcheckout-description"><?= Yii::$service->page->translate->__('Welcome to the checkout,Fill in the fields below to complete your purchase');?> !</p>
-				<p class="onestepcheckout-login-link">
-					<a external  href="<?= Yii::$service->url->getUrl('customer/account/login'); ?>" id="onestepcheckout-login-link"><?= Yii::$service->page->translate->__('Already registered? Click here to login');?>.</a>
-				</p>
+				<?php if (\Yii::$app->user->isGuest): ?>
+                    <p class="onestepcheckout-login-link">
+                        <a external  href="<?= Yii::$service->url->getUrl('customer/account/login'); ?>" id="onestepcheckout-login-link"><?= Yii::$service->page->translate->__('Already registered? Click here to login');?>.</a>
+                    </p>
+                <?php endif; ?>
 				<div class="onestepcheckout-threecolumns checkoutcontainer onestepcheckout-skin-generic onestepcheckout-enterprise">
 					<div class="onestepcheckout-column-left">
 						<?php # address 部门
@@ -70,6 +82,11 @@
 							<div class="coupon_add_log"></div>
 						</div>
 						
+                        <div class="onestepcheckout-coupons">
+							<div class="op_block_title"><?= Yii::$service->page->translate->__('Order Remark (optional)');?></div>
+							<label for="id_couponcode"><?= Yii::$service->page->translate->__('You can fill in the order remark information below');?></label>
+							<textarea class="order_remark" name="order_remark" style="width:100%;height:100px;padding:10px;"></textarea>
+						</div>
 						
 					</div>
 
@@ -98,9 +115,10 @@
 		</form>
 	</div>
 </div>
-
 <script>
 <?php $this->beginBlock('placeOrder') ?>
+	csrfName = $(".thiscsrf").attr("name");
+	csrfVal = $(".thiscsrf").val();
 	function validateEmail(email) {
 		var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 		return re.test(email);
@@ -116,10 +134,7 @@
 		if(country || address_id){
 			$(".onestepcheckout-summary").html('<div style="text-align:center;min-height:40px;"><img src="<?= Yii::$service->image->getImgUrl('images/ajax-loader.gif'); ?>"  /></div>');
 			$(".onestepcheckout-shipping-method-block").html('<div style="text-align:center;min-height:40px;"><img src="<?= Yii::$service->image->getImgUrl('images/ajax-loader.gif'); ?>"  /></div>');
-				
 			ajaxurl = "<?= Yii::$service->url->getUrl('checkout/onepage/ajaxupdateorder');  ?>";
-			
-			
 			$.ajax({
 				async:false,
 				timeout: 8000,
@@ -166,20 +181,20 @@
 			if(!coupon_code){
 				//alert("coupon can not empty!");
 			}
-			//coupon_url = $("#discount-coupon-form").attr("action");
-			//alert(coupon_url);
+			$data = {"coupon_code":coupon_code};
+			$data[csrfName] = csrfVal;
 			$.ajax({
 				async:true,
 				timeout: 6000,
 				dataType: 'json', 
 				type:'post',
-				data: {"coupon_code":coupon_code},
+				data: $data,
 				url:coupon_url,
 				success:function(data, textStatus){ 
 					if(data.status == 'success'){
 						$(".couponType").val($succ_coupon_type);
 						hml = $('.add_coupon_submit').html();
-						if(hml == 'Add Coupon'){
+						if(hml == '<?= Yii::$service->page->translate->__('Add Coupon');?>'){
 							$('.add_coupon_submit').html('<?= Yii::$service->page->translate->__('Cancel Coupon');?>');
 						}else{
 							$('.add_coupon_submit').html('<?= Yii::$service->page->translate->__('Add Coupon');?>');
@@ -194,8 +209,6 @@
 				},
 				error:function (XMLHttpRequest, textStatus, errorThrown){}
 			});
-				
-			
 		});
 		
 		// 对于非登录用户，可以填写密码，进行注册账户，这里进行信息的检查。
@@ -264,8 +277,6 @@
 				j = 1;
 			}
 			
-			
-			
 			if(address_list){
 				if(!j){
 					$(".onestepcheckout-place-order").addClass('visit');
@@ -292,7 +303,6 @@
 				}
 				// password 是否长度大于6，并且两个密码一致
 				if($("#id_create_account").is(':checked')){
-					
 					new_user_pass = $(".customer_password").val();
 					new_user_pass_cm = $(".customer_confirm_password").val();
 					//alert(new_user_pass);
@@ -315,7 +325,6 @@
 						i++; 
 					}  
 				}
-				
 				//alert(222);
 				if(!i && !j){
 					//alert(333);
@@ -325,7 +334,6 @@
 			}
 			
 		});
-		
 		//登录用户切换地址列表
 		$(".address_list").change(function(){
 			val = $(this).val();
@@ -345,7 +353,6 @@
 				}
 			}
 		});
-		
 		// 国家选择后，state需要清空，重新选择或者填写
 		$(".billing_country").change(function(){
 			country = $(this).val();
@@ -378,7 +385,6 @@
 			});
 			ajaxreflush();	
 		});
-		
 		// state select 改变后的事件
 		$(".input-state").off("change").on("change","select.address_state",function(){
 			ajaxreflush();
@@ -387,24 +393,10 @@
 		$(".input-state").off("blur").on("blur","input.address_state",function(){
 			ajaxreflush();
 		});
-		
-		
 		//改变shipping methos
 		$(".onestepcheckout-column-middle").off("click").on("click","input[name=shipping_method]",function(){
 			ajaxreflush();
 		});
-		
-		
-		
-		//$("#billing_address_list").off("change").on("change",".selectstate",function(){
-		//	value = $(".selectstate option:selected").text();
-		//	if($(".selectstate").val()){
-		//		$(".inputstate").val(value);
-		//	}else{
-		//		$(".inputstate").val('');
-		//	}
-		//});
-		
 	});	
 	//ajaxreflush();
 <?php $this->endBlock(); ?> 

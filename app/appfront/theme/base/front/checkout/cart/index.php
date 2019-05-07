@@ -1,9 +1,21 @@
 <?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
+<?php
 use fecshop\app\appfront\helper\Format;
+use fec\helpers\CRequest;
 ?>
 <div class="main container one-column">
 	<div class="col-main">
-	<?php if(is_array($cart_info) && !empty($cart_info)){   ?>
+    <?= Yii::$service->page->widget->render('breadcrumbs',$this); ?>
+    <?= Yii::$service->page->widget->render('flashmessage'); ?>
+	<?php if(is_array($cart_info) && !empty($cart_info)):   ?>
 			    
 		<div class="product_page">
 			
@@ -14,39 +26,54 @@ use fecshop\app\appfront\helper\Format;
 					</div>
 				</div>
 				<div>
-					<?php if(is_array($cart_info['products']) && (!empty($cart_info['products']))){ ?>
+					<?php if(is_array($cart_info['products']) && (!empty($cart_info['products']))): ?>
 								
 					<div class="shopping-cart-div">
 						<div class="shopping-cart-ab">
 						</div>
 						<table id="shopping-cart-table" class="data-table cart-table">
 							<colgroup>
+                                <col width="1">
 								<col width="1">
 								<col width="">
+								<col width="6">
+								<col width="76">
+								<col width="76">
+								<col width="91">
+                                <col width="76">
+								<col width="106">
+								<col width="106">
+                                <col width="26">
 								<col width="1">
-								<col width="10">
-								<col width="1">
-								<col width="1">
-								<col width="1">
-
 							</colgroup>
 							<thead>
 								<tr class="first last">
+                                    <th rowspan="1"><input type="checkbox" name="cart_select_all" class="cart_select cart_select_all" id="cart_select_all">&nbsp;<label for="cart_select_all">All</label></th>
 									<th rowspan="1">&nbsp;</th>
-									<th rowspan="1"><span class="nobr"><?= Yii::$service->page->translate->__('Product Name');?></span></th>
+									<th rowspan="5"><span class="nobr"><?= Yii::$service->page->translate->__('Product Name');?></span></th>
 									<th class="a-center" colspan="1"><span class="nobr"><?= Yii::$service->page->translate->__('Unit Price');?></span></th>
+                                    <th class="a-center" colspan="1"><span class="nobr"><?= Yii::$service->page->translate->__('Weight');?></span></th>
+                                    <th class="a-center" colspan="1"><span class="nobr"><?= Yii::$service->page->translate->__('Volume');?></span></th>
 									<th rowspan="1" class="a-center"><?= Yii::$service->page->translate->__('Qty');?></th>
-									<th class="a-center" colspan="1"><?= Yii::$service->page->translate->__('Subtotal');?></th>
-									<th rowspan="1" class="a-center">&nbsp;</th>
+									<th class="a-center" colspan="1"><?= Yii::$service->page->translate->__('Sub Price');?></th>
+                                    <th class="a-center" colspan="1"><?= Yii::$service->page->translate->__('Sub Weight');?></th>
+                                    <th class="a-center" colspan="1"><?= Yii::$service->page->translate->__('Sub Volume');?></th>
+									<th rowspan="1" class="a-right">&nbsp;</th>
 								</tr>
 												</thead>
 							<tfoot>
 								
 							</tfoot>
 							<tbody>
-								<?php foreach($cart_info['products'] as $product_one){ ?>
+								<?php foreach($cart_info['products'] as $product_one): ?>
 								
 								<tr class="first last odd">
+                                
+                                    <td>
+                                        <input rel="<?= $product_one['item_id']; ?>" <?=  ($product_one['active'] == Yii::$service->cart->quoteItem->activeStatus ) ?  'checked="checked"' : '' ?> type="checkbox" name="cart_select_item" class="cart_select cart_select_item">
+                                    </td>
+									
+                                    
 									<td>
 										<a href="<?= $product_one['url'] ?>" title="<?= $product_one['name'] ?>" class="product-image">
 										<img src="<?= Yii::$service->product->image->getResize($product_one['image'],[100,100],false) ?>" alt="<?= $product_one['name'] ?>" width="75" height="75">
@@ -57,15 +84,15 @@ use fecshop\app\appfront\helper\Format;
 										<h2 class="product-name">
 											<a href="<?= $product_one['url'] ?>"><?= $product_one['name'] ?></a>
 										</h2>
-										<?php  if(is_array($product_one['custom_option_info'])){  ?>
+										<?php  if(is_array($product_one['custom_option_info'])):  ?>
 										<ul>
-											<?php foreach($product_one['custom_option_info'] as $label => $val){  ?>
+											<?php foreach($product_one['custom_option_info'] as $label => $val):  ?>
 												
-												<li><?= Yii::$service->page->translate->__(ucwords($label).':') ?><?= Yii::$service->page->translate->__($val) ?> </li>
+												<li><?= Yii::$service->page->translate->__(ucwords($label)).':' ?><?= Yii::$service->page->translate->__($val) ?> </li>
 												
-											<?php }  ?>
+											<?php endforeach;  ?>
 										</ul>
-										<?php }  ?>
+										<?php endif;  ?>
 									</td>
 									
 									
@@ -75,9 +102,22 @@ use fecshop\app\appfront\helper\Format;
 										</span>
 
 									</td>
+                                    
+                                    <td class="a-right">
+										<span class="cart-price">
+											<span class="price"><?= Format::price($product_one['product_weight']); ?>Kg</span>                
+										</span>
+									</td>
+                                    
+                                    <td class="a-right">
+										<span class="cart-price">
+											<span class="price"><?= Format::price($product_one['product_volume']); ?>c㎡</span>                
+										</span>
+									</td>
+                                
 				   
 									<td class="a-center">
-										<div style="width:80px;">
+										<div style="width:60px;margin:auto">
 											<a href="javascript:void(0)" class="cartqtydown changeitemqty" rel="<?= $product_one['item_id']; ?>" num="<?= $product_one['qty']; ?>"></a>
 											<input name="cart[qty]" size="4" title="Qty" class="input-text qty" rel="<?= $product_one['item_id']; ?>" maxlength="12" value="<?= $product_one['qty']; ?>">
 											<a href="javascript:void(0)" class="cartqtyup changeitemqty" rel="<?= $product_one['item_id']; ?>" num="<?= $product_one['qty']; ?>"></a>
@@ -91,16 +131,31 @@ use fecshop\app\appfront\helper\Format;
 											<span class="price"><?=  $currency_info['symbol'];  ?><?= Format::price($product_one['product_row_price']); ?></span>                            
 										</span>
 									</td>
-									<td class="a-center last">
-										<a href="javascript:void(0)"  rel="<?= $product_one['item_id']; ?>" title="Remove item" class="btn-remove btn-remove2"><?= Yii::$service->page->translate->__('Remove item');?></a>
+                                    
+                                    <td class="a-right">
+										<span class="cart-price">
+											<span class="price"><?= Format::price($product_one['product_row_weight']); ?>Kg</span>                            
+										</span>
+									</td>
+                                    
+                                    
+                                    <td class="a-right">
+										<span class="cart-price">
+											<span class="price"><?= Format::price($product_one['product_row_volume']); ?>c㎡</span>                            
+										</span>
+									</td>
+                                    
+                                    
+									<td class="a-right last">
+										<a style="margin-right: 15px;float: right;" href="javascript:void(0)"  rel="<?= $product_one['item_id']; ?>" title="Remove item" class="btn-remove btn-remove2"><?= Yii::$service->page->translate->__('Remove item');?></a>
 									</td>
 								</tr>
-								<?php  }  ?>
+								<?php  endforeach;  ?>
 								
 							</tbody>
 						</table>
 					</div>
-					<?php  }  ?>
+					<?php  endif;  ?>
 				</div>
 				
 				<div class="cart-collaterals">
@@ -141,15 +196,35 @@ use fecshop\app\appfront\helper\Format;
 								<tbody>
 									<tr>
 										<td style="" class="a-left" colspan="1">
-											<?= Yii::$service->page->translate->__('Subtotal');?> :   </td>
+											<?= Yii::$service->page->translate->__('Sub Totla');?> : 
+                                        </td>
 										<td style="" class="a-right">
-											<span class="price"><?=  $currency_info['symbol'];  ?><?= Format::price($cart_info['product_total']); ?></span>    </td>
-									</tr><tr>
+											<span class="price">
+                                                <?=  $currency_info['symbol'];  ?><?= Format::price($cart_info['product_total']); ?>
+                                            </span>    
+                                        </td>
+									</tr>
+                                    <tr>
 										<td style="" class="a-left" colspan="1">
-											<?= Yii::$service->page->translate->__('Shipping Cost');?>    </td>
+											<?= Yii::$service->page->translate->__('Sub Weight');?> : 
+                                        </td>
 										<td style="" class="a-right">
-											<span class="price"><?=  $currency_info['symbol'];  ?><?= Format::price($cart_info['shipping_cost']); ?></span>    </td>
-									</tr><tr>
+											<span class="price">
+                                                <?= Format::price($cart_info['product_weight']); ?> Kg
+                                            </span>    
+                                        </td>
+									</tr>
+                                    <tr>
+										<td style="" class="a-left" colspan="1">
+											<?= Yii::$service->page->translate->__('Sub Volume');?> : 
+                                        </td>
+										<td style="" class="a-right">
+											<span class="price">
+                                                <?= Format::price($cart_info['product_volume']); ?> c㎡
+                                            </span>    
+                                        </td>
+									</tr>
+                                    <tr>
 										<td style="" class="a-left" colspan="1">
 											<?= Yii::$service->page->translate->__('Discount');?> :    </td>
 										<td style="" class="a-right">
@@ -189,7 +264,7 @@ use fecshop\app\appfront\helper\Format;
 				
 			</div>
 		</div>
-	<?php }else{ ?>
+	<?php else: ?>
 		<div class="empty_cart">
 		<?php
 			$param = ['urlB' => '<a rel="nofollow" href="'.Yii::$service->url->getUrl('customer/account/login').'">','urlE' =>'</a>'];
@@ -204,16 +279,38 @@ use fecshop\app\appfront\helper\Format;
   
   
 		</div>
-	<?php  } ?>
+	<?php  endif; ?>
 	</div>
 </div>
 
 <script>
 	// add to cart js	
 <?php $this->beginBlock('changeCartInfo') ?>
+csrfName = "<?= CRequest::getCsrfName() ?>";
+csrfVal = "<?= CRequest::getCsrfValue() ?>";
 $(document).ready(function(){
-	currentUrl = "<?= Yii::$service->url->getUrl('checkout/cart') ?>"
-	updateCartInfoUrl = "<?= Yii::$service->url->getUrl('checkout/cart/updateinfo') ?>"
+    // set select all checkbox
+    selectall = "<?= Yii::$app->request->get('selectall') ?>";
+    selectAllChecked = false;
+    if (selectall == 1) {
+        selectAllChecked = true;
+    } else {
+        item_select_all = 1;
+        $(".cart_select_item").each(function(){
+            checked = $(this).is(':checked');
+            if (checked == false) {
+                item_select_all = 0;
+            }
+        });
+        if (item_select_all == 1) {
+            selectAllChecked = true;
+        }
+    }
+    $(".cart_select_all").attr("checked",selectAllChecked);
+	currentUrl = "<?= Yii::$service->url->getUrl('checkout/cart') ?>";
+	updateCartInfoUrl = "<?= Yii::$service->url->getUrl('checkout/cart/updateinfo') ?>";
+    selectOneProductUrl = "<?= Yii::$service->url->getUrl('checkout/cart/selectone') ?>";
+    selectAllProductUrl = "<?= Yii::$service->url->getUrl('checkout/cart/selectall') ?>";
 	$(".cartqtydown").click(function(){
 		$item_id = $(this).attr("rel");
 		num = $(this).attr("num");
@@ -222,11 +319,13 @@ $(document).ready(function(){
 				item_id:$item_id,
 				up_type:"less_one"
 			};
+            $data[csrfName] = csrfVal;
+            
 			jQuery.ajax({
 				async:true,
 				timeout: 6000,
 				dataType: 'json', 
-				type:'get',
+				type:'post',
 				data: $data,
 				url:updateCartInfoUrl,
 				success:function(data, textStatus){ 
@@ -245,11 +344,39 @@ $(document).ready(function(){
 			item_id:$item_id,
 			up_type:"add_one"
 		};
-		jQuery.ajax({
+        $data[csrfName] = csrfVal;
+        
+		$.ajax({
 			async:true,
 			timeout: 6000,
 			dataType: 'json', 
-			type:'get',
+			type:'post',
+			data: $data,
+			url:updateCartInfoUrl,
+			success:function(data, textStatus){ 
+				if(data.status == 'success'){
+					window.location.href=currentUrl;
+				}
+			},
+			error:function (XMLHttpRequest, textStatus, errorThrown){}
+		});
+		
+	});
+    
+    $(".btn-remove").click(function(){
+		$item_id = $(this).attr("rel");
+		
+		$data = {
+			item_id:$item_id,
+			up_type:"remove"
+		};
+        $data[csrfName] = csrfVal;
+        
+		$.ajax({
+			async:true,
+			timeout: 6000,
+			dataType: 'json', 
+			type:'post',
 			data: $data,
 			url:updateCartInfoUrl,
 			success:function(data, textStatus){ 
@@ -262,28 +389,56 @@ $(document).ready(function(){
 		
 	});
 	
-	$(".btn-remove").click(function(){
+	$(".cart_select_item").click(function(){
 		$item_id = $(this).attr("rel");
-		
+		checked = $(this).is(':checked');
+        checked = checked ? 1 : 0;
 		$data = {
 			item_id:$item_id,
-			up_type:"remove"
+			checked:checked
 		};
-		jQuery.ajax({
+        $data[csrfName] = csrfVal;
+        
+		$.ajax({
 			async:true,
 			timeout: 6000,
 			dataType: 'json', 
-			type:'get',
+			type:'post',
 			data: $data,
-			url:updateCartInfoUrl,
+			url:selectOneProductUrl,
 			success:function(data, textStatus){ 
 				if(data.status == 'success'){
-					window.location.href=currentUrl;
+					window.location.href = currentUrl;
 				}
 			},
 			error:function (XMLHttpRequest, textStatus, errorThrown){}
 		});
-		
+	});
+    
+    
+    $(".cart_select_all").click(function(){
+		checked = $(this).is(':checked');
+        checked = checked ? 1 : 0;
+		$data = {
+			checked:checked
+		};
+        $data[csrfName] = csrfVal;
+        
+        selectCurrentUrl = currentUrl + '?selectall=' + checked;
+		$.ajax({
+			async:true,
+			timeout: 6000,
+			dataType: 'json', 
+			type:'post',
+			data: $data,
+			url:selectAllProductUrl,
+			success:function(data, textStatus){ 
+				if(data.status == 'success'){
+					window.location.href = selectCurrentUrl;
+				}
+			},
+			error:function (XMLHttpRequest, textStatus, errorThrown){}
+		});
 	});
 	
 	$(".add_coupon_submit").click(function(){
@@ -296,15 +451,17 @@ $(document).ready(function(){
 			coupon_url = "<?=  Yii::$service->url->getUrl('checkout/cart/cancelcoupon'); ?>";
 		}
 		if(!coupon_code){
-			alert("coupon can not empty!");
+			//alert("coupon can not empty!");
 		}
+        $data = {"coupon_code":coupon_code};
+        $data[csrfName] = csrfVal;
 		//coupon_url = $("#discount-coupon-form").attr("action");
-		jQuery.ajax({
+		$.ajax({
 			async:true,
 			timeout: 6000,
 			dataType: 'json', 
-			type:'post',
-			data: {"coupon_code":coupon_code},
+			type: 'post',
+			data: $data,
 			url:coupon_url,
 			success:function(data, textStatus){ 
 				if(data.status == 'success'){
@@ -317,7 +474,6 @@ $(document).ready(function(){
 			},
 			error:function (XMLHttpRequest, textStatus, errorThrown){}
 		});
-			
 		
 	});
 	
@@ -328,3 +484,5 @@ $(document).ready(function(){
 <?php $this->endBlock(); ?> 
 <?php $this->registerJs($this->blocks['changeCartInfo'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
 </script>
+<?php  // Yii::$service->page->trace->getTraceCartJsCode($trace_cart_info) // 这个改成服务端发送加入购物车数据，而不是js传递的方式 ?>
+

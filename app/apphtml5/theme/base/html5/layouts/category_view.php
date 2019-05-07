@@ -36,8 +36,8 @@ $cssOptions = [
 		],
 	],
 ];
-\Yii::$service->page->asset->jsOptions 	= $jsOptions;
-\Yii::$service->page->asset->cssOptions = $cssOptions;				
+\Yii::$service->page->asset->jsOptions 	= \yii\helpers\ArrayHelper::merge($jsOptions, \Yii::$service->page->asset->jsOptions);
+\Yii::$service->page->asset->cssOptions = \yii\helpers\ArrayHelper::merge($cssOptions, \Yii::$service->page->asset->cssOptions);				
 \Yii::$service->page->asset->register($this);
 ?>
 
@@ -48,6 +48,7 @@ $cssOptions = [
 <?= Yii::$service->page->widget->render('head',$this); ?>
 </head>
 <body>
+<?= Yii::$service->page->widget->render('beforeContent',$this); ?>
 <?php $this->beginBody() ?>
 	<div class="page-group">
 		<div class="page" id="page-infinite-scroll-bottom">
@@ -55,6 +56,7 @@ $cssOptions = [
 			<?= $content; ?>
 		</div>
 		<?= Yii::$service->page->widget->render('menu',$this); ?>
+        <?= Yii::$service->page->widget->render('trace',$this); ?>
 	</div>
 <?php $this->endBody() ?>
 </body>

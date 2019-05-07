@@ -1,12 +1,19 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="main container one-column">
 	<div class="col-main">
 		<?= Yii::$service->page->widget->render('flashmessage'); ?>
-
 		<form action="<?= Yii::$service->url->getCurrentUrl(); ?>" method="post" id="onestepcheckout-form">
 			<?= \fec\helpers\CRequest::getCsrfInputHtml(); ?>
 			<fieldset style="margin: 0;" class="group-select">
 				<p class="onestepcheckout-description"><?= Yii::$service->page->translate->__('Welcome to the checkout,Fill in the fields below to complete your purchase');?> !</p>
-				
 				<div class="onestepcheckout-threecolumns checkoutcontainer onestepcheckout-skin-generic onestepcheckout-enterprise">
 					<div class="onestepcheckout-column-left">
 						<?php # address 部门
@@ -59,6 +66,11 @@
 							<div class="coupon_add_log"></div>
 						</div>
 						
+                        <div class="onestepcheckout-coupons">
+							<div class="op_block_title"><?= Yii::$service->page->translate->__('Order Remark (optional)');?></div>
+							<label for="id_couponcode"><?= Yii::$service->page->translate->__('You can fill in the order remark information below');?></label>
+							<textarea class="order_remark" name="order_remark" style="width:94%;height:100px;padding:10px;"></textarea>
+						</div>
 						
 					</div>
 
@@ -108,7 +120,6 @@
 				
 			ajaxurl = "<?= Yii::$service->url->getUrl('checkout/onepage/ajaxupdateorder');  ?>";
 			
-			
 			$.ajax({
 				async:false,
 				timeout: 8000,
@@ -127,8 +138,7 @@
 						$(".review_order_view").html(data.reviewOrderHtml)
 						$(".shipping_method_html").html(data.shippingHtml);
 					
-					}
-						
+					}	
 				},
 				error:function (XMLHttpRequest, textStatus, errorThrown){
 						
@@ -183,7 +193,6 @@
 				},
 				error:function (XMLHttpRequest, textStatus, errorThrown){}
 			});
-				
 			
 		});
 		
@@ -245,9 +254,6 @@
 				j = 1;
 			}
 			
-			
-			
-			
 			$("#onestepcheckout-form .required-entry").each(function(){
 				value = $(this).val();
 				if(!value){
@@ -267,10 +273,7 @@
 				$("#onestepcheckout-form").submit();
 			}
 			
-			
 		});
-		
-		
 		
 		// 国家选择后，state需要清空，重新选择或者填写
 		$(".billing_country").change(function(){
@@ -304,7 +307,7 @@
 			});
 			ajaxreflush();	
 		});
-		
+        
 		// state select 改变后的事件
 		$(".input-state").off("change").on("change","select.address_state",function(){
 			ajaxreflush();
@@ -314,13 +317,10 @@
 			ajaxreflush();
 		});
 		
-		
 		//改变shipping methos
 		$(".onestepcheckout-column-middle").off("click").on("click","input[name=shipping_method]",function(){
 			ajaxreflush();
 		});
-		
-		
 		
 		//$("#billing_address_list").off("change").on("change",".selectstate",function(){
 		//	value = $(".selectstate option:selected").text();
@@ -330,7 +330,6 @@
 		//		$(".inputstate").val('');
 		//	}
 		//});
-		
 	});	
 	//ajaxreflush();
 <?php $this->endBlock(); ?> 

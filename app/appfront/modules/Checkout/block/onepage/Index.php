@@ -7,7 +7,7 @@
  * @license http://www.fecshop.com/license/
  */
 
-namespace fecshop\app\appfront\modules\checkout\block\onepage;
+namespace fecshop\app\appfront\modules\Checkout\block\onepage;
 
 use Yii;
 
@@ -31,8 +31,7 @@ class Index
 
     public function getLastData()
     {
-        $cartInfo = Yii::$service->cart->getCartInfo();
-
+        $cartInfo = Yii::$service->cart->getCartInfo(true);
         if (!isset($cartInfo['products']) || !is_array($cartInfo['products']) || empty($cartInfo['products'])) {
             return Yii::$service->url->redirectByUrlKey('checkout/cart');
         }
@@ -41,24 +40,34 @@ class Index
         $this->initCountry();
         $this->initState();
         $shippings = $this->getShippings();
-        $last_cart_info = $this->getCartInfo($this->_shipping_method, $this->_country, $this->_state);
-
+        $last_cart_info = $this->getCartInfo(true, $this->_shipping_method, $this->_country, $this->_state);
+        $this->breadcrumbs(Yii::$service->page->translate->__('Checkout Onepage'));
         return [
-            'payments'                    => $this->getPayment(),
+            'payments'                 => $this->getPayment(),
             'shippings'                => $shippings,
-            'current_payment_method'    => $this->_payment_method,
+            'current_payment_method'   => $this->_payment_method,
             'cart_info'                => $last_cart_info,
             'currency_info'            => $currency_info,
             'address_view_file'        => $this->_address_view_file,
-            'cart_address'                => $this->_address,
-            'cart_address_id'            => $this->_address_id,
-            'address_list'                => $this->_address_list,
-            'country_select'            => $this->_countrySelect,
-            //'state_select'			=> $this->_stateSelect,
-            'state_html'                => $this->_stateHtml,
+            'cart_address'             => $this->_address,
+            'cart_address_id'          => $this->_address_id,
+            'address_list'             => $this->_address_list,
+            'country_select'           => $this->_countrySelect,
+            //'state_select'		   => $this->_stateSelect,
+            'state_html'               => $this->_stateHtml,
         ];
     }
-
+    
+    // 面包屑导航
+    protected function breadcrumbs($name)
+    {
+        if (Yii::$app->controller->module->params['checkout_onepage_breadcrumbs']) {
+            Yii::$service->page->breadcrumbs->addItems(['name' => $name]);
+        } else {
+            Yii::$service->page->breadcrumbs->active = false;
+        }
+    }
+    
     /**
      * 初始化地址信息，首先从当前用户里面取值，然后从cart表中取数据覆盖
      * 1. 初始化 $this->_address，里面保存的各个地址信息。
@@ -268,10 +277,10 @@ class Index
      *                    本函数为从数据库中得到购物车中的数据，然后结合产品表
      *                    在加入一些产品数据，最终补全所有需要的信息。
      */
-    public function getCartInfo($shipping_method, $country, $state)
+    public function getCartInfo($activeProduct, $shipping_method, $country, $state)
     {
         if (!$this->_cart_info) {
-            $cart_info = Yii::$service->cart->getCartInfo($shipping_method, $country, $state);
+            $cart_info = Yii::$service->cart->getCartInfo($activeProduct, $shipping_method, $country, $state);
             if (isset($cart_info['products']) && is_array($cart_info['products'])) {
                 foreach ($cart_info['products'] as $k=>$product_one) {
                     // 设置名字，得到当前store的语言名字。
@@ -330,17 +339,17 @@ class Index
     }
 
     /**
-     * @property $current_shipping_method | String  当前选择的货运方式
+     * @param $current_shipping_method | String  当前选择的货运方式
      * @return Array，数据格式为：
-     *                                    [
-     *                                    'method'=> $method,
-     *                                    'label' => $label,
-     *                                    'name'  => $name,
-     *                                    'cost'  => $symbol.$currentCurrencyCost,
-     *                                    'check' => $check,
-     *                                    'shipping_i' => $shipping_i,
-     *                                    ]
-     *                                    根据选择的货运方式，得到费用等信息。
+     * [
+     *      'method'=> $method,
+     *      'label' => $label,
+     *      'name'  => $name,
+     *      'cost'  => $symbol.$currentCurrencyCost,
+     *      'check' => $check,
+     *      'shipping_i' => $shipping_i,
+     * ]
+     * 得到所有的，有效shipping method数组。
      */
     public function getShippings($custom_shipping_method = '')
     {
@@ -351,18 +360,16 @@ class Index
             $region = $this->_state;
         }
         $cartProductInfo = Yii::$service->cart->quoteItem->getCartProductInfo();
-        //echo $country ;
         $product_weight = $cartProductInfo['product_weight'];
-        // 传递当前的货运方式，这个需要从cart中选取，
-        // 如果cart中没有shipping_method，那么该值为空
-        //var_dump($this->_cart_info);
+        $product_volume_weight = $cartProductInfo['product_volume_weight'];
+        $product_final_weight = max($product_weight, $product_volume_weight);
         $cartShippingMethod = $this->_cart_info['shipping_method'];
-        //echo "$custom_shipping_method,$cartShippingMethod";
-        $current_shipping_method = Yii::$service->shipping->getCurrentShippingMethod($custom_shipping_method, $cartShippingMethod);
-
+        // 当前的货运方式
+        $current_shipping_method = Yii::$service->shipping->getCurrentShippingMethod($custom_shipping_method, $cartShippingMethod, $country, $region, $product_final_weight);
         $this->_shipping_method = $current_shipping_method;
-        $shippingArr = $this->getShippingArr($product_weight, $current_shipping_method, $country, $region);
-
+        // 得到所有，有效的shipping method
+        $shippingArr = $this->getShippingArr($product_final_weight, $current_shipping_method, $country, $region = '*');
+        
         return $shippingArr;
     }
 
@@ -414,27 +421,23 @@ class Index
     }
 
     /**
-     * @property $weight | Float , 总量
-     * @property $shipping_method | String  $shipping_method key
-     * @property $country | String  国家
+     * @param $weight | Float , 总量
+     * @param $shipping_method | String  $shipping_method key
+     * @param $country | String  国家
      * @return array ， 通过上面的三个参数，得到各个运费方式对应的运费等信息。
      */
-    public function getShippingArr($weight, $current_shipping_method, $country, $region = '*')
+    public function getShippingArr($weight, $current_shipping_method, $country, $region)
     {
-        $allshipping = Yii::$service->shipping->getShippingMethod();
+        $available_shipping = Yii::$service->shipping->getAvailableShippingMethods($country, $region, $weight);
         $sr = '';
         $shipping_i = 1;
         $arr = [];
-        if (is_array($allshipping)) {
-            foreach ($allshipping as $method=>$shipping) {
+        if (is_array($available_shipping) && !empty($available_shipping)) {
+            foreach ($available_shipping as $method=>$shipping) {
                 $label = $shipping['label'];
                 $name = $shipping['name'];
                 // 得到运费的金额
-                //echo "$method,$weight,$country,$region";
-                // getShippingCostWithSymbols
-                $cost = Yii::$service->shipping->getShippingCost($method, $weight, $country, $region);
-                //var_dump($cost);
-                //echo "##"
+                $cost = Yii::$service->shipping->getShippingCost($method, $shipping, $weight, $country, $region);
                 $currentCurrencyCost = $cost['currCost'];
                 $symbol = Yii::$service->page->currency->getCurrentSymbol();
                 if ($current_shipping_method == $method) {
@@ -455,7 +458,6 @@ class Index
                 $shipping_i++;
             }
         }
-
         return $arr;
     }
 
@@ -530,9 +532,11 @@ class Index
              */
             $quoteItem = Yii::$service->cart->quoteItem->getCartProductInfo();
             $product_weight = $quoteItem['product_weight'];
-            $shippingCost = Yii::$service->shipping->getShippingCost($shipping_method, $product_weight, $country, $state);
+            // 计算运费。
+            $avaiable_method = Yii::$service->shipping->getAvailableShippingMethods($country,$region,$product_weight);
+            $shippingInfo = $avaiable_method[$shipping_method];
+            $shippingCost = Yii::$service->shipping->getShippingCost($shipping_method, $shippingInfo, $product_weight, $country, $state);
             Yii::$service->cart->quote->setShippingCost($shippingCost);
-
             /**
              * 下面通过当前的货币，购物车信息等数组数据，+上view文件
              * 返回order部分的html内容。
@@ -542,7 +546,7 @@ class Index
             $reviewOrderView = [
                 'view'    => 'checkout/onepage/index/review_order.php',
             ];
-            $cart_info = $this->getCartInfo($shipping_method, $this->_country, $this->_state);
+            $cart_info = $this->getCartInfo(true, $shipping_method, $this->_country, $this->_state);
 
             $reviewOrderParam = [
                 'cart_info' => $cart_info,

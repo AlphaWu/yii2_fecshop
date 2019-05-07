@@ -10,7 +10,7 @@
 namespace fecshop\app\appadmin\modules\Catalog\block\productinfo\index;
 
 use fec\helpers\CRequest;
-use fecshop\app\appadmin\modules\Catalog\helper\Product as ProductHelper;
+//use fecshop\app\appadmin\modules\Catalog\helper\Product as ProductHelper;
 use Yii;
 
 /**
@@ -22,9 +22,19 @@ class Attr
 {
     protected $_currentAttrGroup;
     protected $_attrInfo;
+    /**
+     * 为了可以使用rewriteMap，use 引入的文件统一采用下面的方式，通过Yii::mapGet()得到className和Object
+     */
+    protected $_productHelperName = '\fecshop\app\appadmin\modules\Catalog\helper\Product';
+    protected $_productHelper;
 
     public function __construct($one)
     {
+        /**
+         * 通过Yii::mapGet() 得到重写后的class类名以及对象。Yii::mapGet是在文件@fecshop\yii\Yii.php中
+         */
+        list($this->_productHelperName,$this->_productHelper) = Yii::mapGet($this->_productHelperName);  
+        
         $currentAttrGroup = CRequest::param('attr_group');
         if ($currentAttrGroup) {
             $this->_currentAttrGroup = $currentAttrGroup;
@@ -35,12 +45,6 @@ class Attr
         }
 
         Yii::$service->product->addGroupAttrs($this->_currentAttrGroup);
-
-        //$this->_attrInfo = Yii::$service->product->getGroupAttrInfo($this->_currentAttrGroup);
-        //if(is_array($this->_attrInfo) && !empty($this->_attrInfo)){
-        //	$attrs = array_keys($this->_attrInfo);
-        //	\fecshop\models\mongodb\Product::addCustomProductAttrs($attrs);
-        //}
     }
 
     public function getGroupAttr()
@@ -76,31 +80,26 @@ class Attr
     {
         return [
             [
-                'label'=>'相关产品sku（逗号隔开）',
-                'name'=>'relation_sku',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('SKU of related products (comma separated)'),
+                'name'  => 'relation_sku',
+                'display' => [
                     'type' => 'inputString',
-
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'买了还买sku（逗号隔开）',
-                'name'=>'buy_also_buy_sku',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Bought also bought sku (comma separated)'),
+                'name'  => 'buy_also_buy_sku',
+                'display' => [
                     'type' => 'inputString',
-
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'看了还看sku（逗号隔开）',
-                'name'=>'see_also_see_sku',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Saw also saw sku (comma separated)'),
+                'name'  => 'see_also_see_sku',
+                'display' => [
                     'type' => 'inputString',
-
                 ],
                 'require' => 0,
             ],
@@ -112,121 +111,162 @@ class Attr
     {
         return [
             [
-                'label'=>'产品名字',
-                'name'=>'name',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Product Name'),
+                'name'  => 'name',
+                'display' => [
                     'type' => 'inputString',
                     'lang' => true,
                 ],
                 'require' => 1,
             ],
             [
-                'label'=>'SPU',
-                'name'=>'spu',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Spu'),
+                'name'  => 'spu',
+                'display' => [
                     'type' => 'inputString',
                     'lang' => false,
-
                 ],
                 'require' => 1,
             ],
             [
-                'label'=>'SKU',
-                'name'=>'sku',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Sku'),
+                'name'  => 'sku',
+                'display' => [
                     'type' => 'inputString',
                     'lang' => false,
-
                 ],
                 'require' => 1,
             ],
             [
-                'label'=>'重量(KG)',
-                'name'=>'weight',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Long (CM)'),
+                'name'  => 'long',
+                'display' => [
                     'type' => 'inputString',
                     'lang' => false,
-
                 ],
                 'require' => 0,
             ],
             [
-                'label'=>'分值',
-                'name'=>'score',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Width (CM)'),
+                'name'  => 'width',
+                'display' => [
                     'type' => 'inputString',
                     'lang' => false,
-
                 ],
                 'require' => 0,
             ],
             [
-                'label'=>'状态',
-                'name'=>'status',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('High (CM)') ,
+                'name' => 'high',
+                'display' => [
+                    'type' => 'inputString',
+                    'lang' => false,
+                ],
+                'require' => 0,
+            ],
+            [
+                'label' => '<span >' . Yii::$service->page->translate->__('Volume weight (Kg) {link_a}   Formula {link_b} ', [ 'link_a' => '<a  target="_blank" href="http://www.fecshop.com/topic/659">' , 'link_b' => '</a>' ]) . '</span>' ,
+                'name'  => 'volume_weight',
+                'display' => [
+                    'type' => 'inputString',
+                    'lang' => false,
+                ],
+                'require' => 0,
+            ],
+            [
+                'label' => Yii::$service->page->translate->__('Weight (KG)'),
+                'name'  => 'weight',
+                'display' => [
+                    'type' => 'inputString',
+                    'lang' => false,
+                ],
+                'require' => 0,
+            ],
+            [
+                'label' => Yii::$service->page->translate->__('Score'),
+                'name'  => 'score',
+                'display' => [
+                    'type' => 'inputString',
+                    'lang' => false,
+                ],
+                'require' => 0,
+            ],
+            [
+                'label' => Yii::$service->page->translate->__('Status'),
+                'name'  => 'status',
+                'display' => [
                     'type' => 'select',
-                    'data' => ProductHelper::getStatusArr(),
+                    'data' => $this->_productHelper->getStatusArr(),
                 ],
                 'require' => 1,
                 'default' => 1,
             ],
-
             [
-                'label'=>'新产品开始时间',
-                'name'=>'new_product_from',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('New Product Begin'),
+                'name'  => 'new_product_from',
+                'display' => [
                     'type' => 'inputDate',
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'新产品结束时间',
-                'name'=>'new_product_to',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('New Product End'),
+                'name'  => 'new_product_to',
+                'display' => [
                     'type' => 'inputDate',
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'Url Key',
-                'name'=>'url_key',
+                'label' => Yii::$service->page->translate->__('Url Key'),
+                'name'  => 'url_key',
                 'display'=>[
                     'type' => 'inputString',
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'库存个数',
-                'name'=>'qty',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Stock Qty'),
+                'name'  => 'qty',
+                'display' => [
                     'type' => 'inputString',
                 ],
                 'require' => 1,
             ],
-
             [
-                'label'=>'库存状态',
-                'name'=>'is_in_stock',
+                'label' => Yii::$service->page->translate->__('Package sales qty'),
+                'name'  => 'package_number',
+                'display' => [
+                    'type' => 'inputString',
+                ],
+                'require' => 0,
+            ],
+            [
+                'label' => Yii::$service->page->translate->__('Min sale qty'),
+                'name'  => 'min_sales_qty',
+                'display' => [
+                    'type' => 'inputString',
+                ],
+                'require' => 0,
+            ],
+            [
+                'label' => Yii::$service->page->translate->__('Stock Status'),
+                'name'  => 'is_in_stock',
                 'display'=>[
                     'type' => 'select',
-                    'data' => ProductHelper::getInStockArr(),
+                    'data' => $this->_productHelper->getInStockArr(),
                 ],
                 'require' => 1,
                 'default' => 1,
             ],
-
             [
-                'label'=>'备注',
-                'name'=>'remark',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Remark'),
+                'name'  => 'remark',
+                'display' => [
                     'type' => 'inputString',
                 ],
                 'require' => 0,
             ],
-
         ];
     }
 
@@ -234,44 +274,42 @@ class Attr
     {
         return [
             [
-                'label'=>'成本价格',
-                'name'=>'cost_price',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Cost Price'),
+                'name'  => 'cost_price',
+                'display' => [
                     'type' => 'inputString',
                 ],
                 'require' => 0,
             ],
             [
-                'label'=>'销售价格',
-                'name'=>'price',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Sale Price'),
+                'name'  => 'price',
+                'display' => [
                     'type' => 'inputString',
                 ],
                 'require' => 1,
             ],
             [
-                'label'=>'销售特价',
-                'name'=>'special_price',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Special Price'),
+                'name'  => 'special_price',
+                'display' => [
                     'type' => 'inputString',
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'特价开始时间',
-                'name'=>'special_from',
+                'label' => Yii::$service->page->translate->__('Special Begin'),
+                'name'  => 'special_from',
                 'display'=>[
-                    'type' => 'inputDate',
+                    'type' => 'inputDateTime',
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'特价结束时间',
-                'name'=>'special_to',
+                'label' => Yii::$service->page->translate->__('Special End'),
+                'name'  => 'special_to',
                 'display'=>[
-                    'type' => 'inputDate',
+                    'type' => 'inputDateTime',
                 ],
                 'require' => 0,
             ],
@@ -282,31 +320,27 @@ class Attr
     {
         return [
             [
-                'label'=>'Meta Title',
-                'name'=>'meta_title',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Meta Title'),
+                'name'  => 'meta_title',
+                'display' => [
                     'type' => 'inputString',
                     'lang' => true,
-
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'Meta Keywords',
-                'name'=>'meta_keywords',
+                'label' => Yii::$service->page->translate->__('Meta Keywords'),
+                'name'  => 'meta_keywords',
                 'display'=>[
                     'type' => 'inputString',
                     'lang' => true,
-
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'Meta Description',
-                'name'=>'meta_description',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Meta Description'),
+                'name'  => 'meta_description',
+                'display' => [
                     'type' => 'textarea',
                     'lang' => true,
                     'rows'    => 14,
@@ -321,9 +355,9 @@ class Attr
     {
         return [
             [
-                'label'=>'产品Short描述',
-                'name'=>'short_description',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Short Description') ,
+                'name'  => 'short_description',
+                'display' => [
                     'type' => 'textarea',
                     'lang' => true,
                     'rows'    => 14,
@@ -331,11 +365,10 @@ class Attr
                 ],
                 'require' => 0,
             ],
-
             [
-                'label'=>'产品描述（<b>必填</b>）',
-                'name'=>'description',
-                'display'=>[
+                'label' => Yii::$service->page->translate->__('Description {b} Require {e}', ['b' => ' (<b>' , 'e' => '</b>)']) ,
+                'name'  => 'description',
+                'display' => [
                     'type' => 'textarea',
                     'lang' => true,
                     'rows'    => 14,
@@ -348,8 +381,6 @@ class Attr
 
     public function getCatalogInfo()
     {
-        return [
-
-        ];
+        return [];
     }
 }

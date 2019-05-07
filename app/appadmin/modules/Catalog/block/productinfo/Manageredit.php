@@ -13,7 +13,7 @@ use fec\helpers\CRequest;
 use fec\helpers\CUrl;
 use fecshop\app\appadmin\interfaces\base\AppadminbaseBlockEditInterface;
 use fecshop\app\appadmin\modules\AppadminbaseBlockEdit;
-use fecshop\app\appadmin\modules\Catalog\block\productinfo\index\Attr;
+//use fecshop\app\appadmin\modules\Catalog\block\productinfo\index\Attr;
 use Yii;
 
 /**
@@ -26,12 +26,29 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
     public $_saveUrl;
     protected $_attr;
     protected $_custom_option_list_str;
+    /**
+     * 为了可以使用rewriteMap，use 引入的文件统一采用下面的方式，通过Yii::mapGet()得到className和Object
+     */
+    protected $_attrBlockName = '\fecshop\app\appadmin\modules\Catalog\block\productinfo\index\Attr';
+    protected $_attrBlock;
 
     public function init()
     {
+        /**
+         * 通过Yii::mapGet() 得到重写后的class类名以及对象。Yii::mapGet是在文件@fecshop\yii\Yii.php中
+         */
+        $this->_attrBlockName = Yii::mapGetName($this->_attrBlockName);  
+        
         $this->_saveUrl = CUrl::getUrl('catalog/productinfo/managereditsave');
         parent::init();
-        $this->_attr = new Attr($this->_one);
+        $product_id = $this->_param[$this->_primaryKey];
+        if($product_id){
+            // 从mysql中取出来qty。
+            $qty = Yii::$service->product->stock->getProductFlatQty($product_id);
+            $this->_one['qty'] = $qty ;
+        }
+        
+        $this->_attr = new $this->_attrBlockName($this->_one);
         //$this->_param		= $request_param[$this->_editFormData];
     }
 
@@ -55,26 +72,26 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
     public function getLastData()
     {
         return [
-            'baseInfo'        => $this->getBaseInfo(),
-            'priceInfo'    => $this->getPriceInfo(),
-            'tier_price'    => $this->_one['tier_price'],
-            'metaInfo'        => $this->getMetaInfo(),
-            'groupAttr'        => $this->getGroupAttr(),
-            'descriptionInfo' => $this->getDescriptionInfo(),
-            'attrGroup'        => $this->_attr->getProductAttrGroupSelect(),
-            'primaryInfo'    => $this->getCurrentProductPrimay(),
-            'img_html'        => $this->getImgHtml(),
-            'custom_option' => $this->_one['custom_option'],
-            'product_id'    => $this->_one[Yii::$service->product->getPrimaryKey()],
-            //'editBar' 	=> $this->getEditBar(),
-            //'textareas'	=> $this->_textareas,
-            //'lang_attr'	=> $this->_lang_attr,
-            'saveUrl'        => $this->_saveUrl,
-            'operate'        => Yii::$app->request->get('operate'),
+            'baseInfo'          => $this->getBaseInfo(),
+            'priceInfo'         => $this->getPriceInfo(),
+            'tier_price'        => $this->_one['tier_price'],
+            'metaInfo'          => $this->getMetaInfo(),
+            'groupAttr'         => $this->getGroupAttr(),
+            'descriptionInfo'   => $this->getDescriptionInfo(),
+            'attrGroup'         => $this->_attr->getProductAttrGroupSelect(),
+            'primaryInfo'       => $this->getCurrentProductPrimay(),
+            'img_html'          => $this->getImgHtml(),
+            'custom_option'     => $this->_one['custom_option'],
+            'product_id'        => $this->_one[Yii::$service->product->getPrimaryKey()],
+            //'editBar' 	    => $this->getEditBar(),
+            //'textareas'	    => $this->_textareas,
+            //'lang_attr'	    => $this->_lang_attr,
+            'saveUrl'           => $this->_saveUrl,
+            'operate'           => Yii::$app->request->get('operate'),
             'custom_option_add' => $this->getCustomOptionAdd(),
             'custom_option_img' => $this->getCustomOpImgHtml(),
-            'custom_option_list' => $this->_custom_option_list_str,
-            'relation' => $this->getRelationInfo(),
+            'custom_option_list'=> $this->_custom_option_list_str,
+            'relation'          => $this->getRelationInfo(),
         ];
     }
 
@@ -85,6 +102,7 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
         if ($currentAttrGroup) {
             $attr_group = $currentAttrGroup;
         }
+        
         $str = '';
         $this->_custom_option_list_str = '';
         if ($attr_group) {
@@ -94,15 +112,15 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
 
                 foreach ($custom_option_attr_info as $attr => $info) {
                     $label = $info['label'];
-                    $this->_custom_option_list_str .= '<th>'.$label.'</th>';
+                    $this->_custom_option_list_str .= '<th>' . Yii::$service->page->translate->__($attr) . '</th>';
 
-                    $str .= '<div class="nps"><span >'.$label.':</span>';
+                    $str .= '<div class="nps"><span >' . Yii::$service->page->translate->__($attr) . ':</span>';
                     $type = isset($info['display']['type']) ? $info['display']['type'] : '';
                     $data = isset($info['display']['data']) ? $info['display']['data'] : '';
                     if ($type == 'select' && is_array($data) && !empty($data)) {
                         $str .= '<select atr="'.$attr.'" class="custom_option_attr">';
-                        foreach ($info['display']['data'] as $k=>$v) {
-                            $str .= '<option value="'.$k.'">'.$v.'</option>';
+                        foreach ($info['display']['data'] as $v) {
+                            $str .= '<option value="'.$v.'">' . Yii::$service->page->translate->__($v) . '</option>';
                         }
                         $str .= '</select>';
                     }
@@ -111,28 +129,30 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
                 $str .= '<div class="nps"><span>Sku:</span><input style="width:40px;" type="text" class="custom_option_sku"  value="" /></div>
 						<div class="nps"><span>Qty:</span><input style="width:40px;" type="text" class="custom_option_qty"  value="" /></div>
 						<div class="nps"><span>Price:</span><input  style="width:40px;" type="text" class="custom_option_price"  value="" /></div>
-						<div class="nps" style="width:220px;"><a class=" button chose_custom_op_img" style="display: block;float: left; margin: -2px 10px 0;" ><span style="margin:0">选择图片</span></a><div class="chosened_img"></div></div>
+						<div class="nps" style="width:220px;"><a class=" button chose_custom_op_img" style="display: block;float: left; margin: -2px 10px 0;" ><span style="margin:0">' . Yii::$service->page->translate->__('Select Image') . '</span></a><div class="chosened_img"></div></div>
 						<div class="nps"><a style="display: block;float: right; margin: -2px 10px 0;" class="button add_custom_option"><span style="margin:0">+</span></a></div>
 					';
 
-                $this->_custom_option_list_str .= '<th>sku</th><th>qty</th><th>price</th><th>img</th><th>delete</th>';
+                $this->_custom_option_list_str .= '<th>' . Yii::$service->page->translate->__('sku') . '</th><th>' . Yii::$service->page->translate->__('qty') . '</th><th>' . Yii::$service->page->translate->__('price') . '</th><th>' . Yii::$service->page->translate->__('image') . '</th><th>' . Yii::$service->page->translate->__('delete') . '</th>';
                 $this->_custom_option_list_str .= '<tr><thead>';
                 //$this->_custom_option_list_str .= '<tbody></tbody>';
                 //$this->_custom_option_list_str .= '</table>';
                 $this->_custom_option_list_str .= '<tbody>';
+                //echo '<br><br>';
+                
                 $custom_option = $this->_one['custom_option'];
                 if (is_array($custom_option) && !empty($custom_option)) {
                     foreach ($custom_option  as $one) {
                         $this->_custom_option_list_str .= '<tr>';
                         foreach ($custom_option_attr_info as $attr => $info) {
                             $val = $one[$attr];
-                            $this->_custom_option_list_str .= '<td rel="'.$attr.'">'.$val.'</td>';
+                            $this->_custom_option_list_str .= '<td rel="'.$attr.'" val="'.$val.'">' . Yii::$service->page->translate->__($val) . '</td>';
                         }
-                        $this->_custom_option_list_str .= '<td class="custom_option_sku" rel="sku">'.$one['sku'].'</td>';
-                        $this->_custom_option_list_str .= '<td rel="qty">'.$one['qty'].'</td>';
-                        $this->_custom_option_list_str .= '<td rel="price">'.$one['price'].'</td>';
-                        $this->_custom_option_list_str .= '<td rel="image"><img style="width:30px;" rel="'.$one['image'].'" src="'.Yii::$service->product->image->getUrl($one['image']).'"/></td>';
-                        $this->_custom_option_list_str .= '<td><a title="删除"  href="javascript:void(0)" class="btnDel deleteCustomList">删除</a></td>';
+                        $this->_custom_option_list_str .= '<td class="custom_option_sku" rel="sku" val="'.$one['sku'].'">'.$one['sku'].'</td>';
+                        $this->_custom_option_list_str .= '<td rel="qty" val="'.$one['qty'].'">'.$one['qty'].'</td>';
+                        $this->_custom_option_list_str .= '<td rel="price" val="'.$one['price'].'">'.$one['price'].'</td>';
+                        $this->_custom_option_list_str .= '<td rel="image" ><img style="width:30px;" rel="'.$one['image'].'" src="'.Yii::$service->product->image->getUrl($one['image']).'"/></td>';
+                        $this->_custom_option_list_str .= '<td><a title="' . Yii::$service->page->translate->__('delete') . '"  href="javascript:void(0)" class="btnDel deleteCustomList"><i class="fa fa-trash-o"></i></a></td>';
                         $this->_custom_option_list_str .= '</tr>';
                     }
                 }
@@ -193,18 +213,49 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
 
         return $this->_lang_attr.$editBar.$this->_textareas;
     }
-
+    
     public function getGroupAttr()
     {
         $this->_lang_attr = '';
         $this->_textareas = '';
         $editArr = $this->_attr->getGroupAttr();
-        //var_dump($editArr);
-        //var_dump($this->_one);
         $this->_primaryKey = $this->_service->getPrimaryKey();
-        $id = $this->_param[$this->_primaryKey];
-        $this->_one = $this->_service->getByPrimaryKey($id);
-        if (!empty($editArr)) {
+        $product_id = $this->_param[$this->_primaryKey];
+        $this->_one = $this->_service->getByPrimaryKey($product_id);
+        if($product_id){
+            // 从mysql中取出来qty。
+            $qty = Yii::$service->product->stock->getProductFlatQty($product_id);
+            $this->_one['qty'] = $qty ;
+            // 从mysql中取出来custom option qty
+            $co_qty_arr     = Yii::$service->product->stock->getProductCustomOptionQty($product_id);
+            //var_dump($co_qty_arr);
+            $custom_option  = $this->_one['custom_option'];
+            if(is_array($co_qty_arr) && is_array($custom_option)){
+                $arr = [];
+                foreach($custom_option as $custom_option_sku => $one){
+                    $custom_option[$custom_option_sku]['qty'] = isset($co_qty_arr[$custom_option_sku]) ? $co_qty_arr[$custom_option_sku] : 0;
+                }
+                $this->_one['custom_option'] = $custom_option;
+            }
+        }
+        // add translate
+        if (!empty($editArr) && is_array($editArr)) {
+            foreach ($editArr as $k => $v) {
+                $editArr[$k]['label'] = Yii::$service->page->translate->__($k);
+                if (isset($v['display']['type']) && in_array($v['display']['type'], ['select', 'editSelect'])) {
+                    if (isset($v['display']['data']) && is_array($v['display']['data'])) {
+                        $select_data = [];
+                        foreach ($v['display']['data'] as $v2) {
+                            if ($v['display']['type'] == 'select') {
+                                $select_data[$v2] = Yii::$service->page->translate->__($v2);
+                            } else {
+                                $select_data[$v2] = $v2;
+                            }
+                        }
+                        $editArr[$k]['display']['data'] = $select_data;
+                    }
+                }    
+            }
             $editBar = $this->getEditBar($editArr);
 
             return $this->_lang_attr.$editBar.$this->_textareas;
@@ -226,32 +277,63 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
 			<table class="list productimg" width="100%" >
 				<thead>
 					<tr>
-						<td>图片</td>
-						<td>label</td>
-						<td>sort_order</td>
-						<td>主图</td>
-						<td>删除</td>
+						<td>' . Yii::$service->page->translate->__('Image') . '</td>
+						<td>' . Yii::$service->page->translate->__('Label') . '</td>
+						<td>' . Yii::$service->page->translate->__('Sort Order') . '</td>
+                        <td>' . Yii::$service->page->translate->__('Main Image') . '</td>
+                        <td>' . Yii::$service->page->translate->__('Window Img') . '</td>
+						<td>' . Yii::$service->page->translate->__('Description Img') . '</td>
+                        <td>' . Yii::$service->page->translate->__('Delete') . '</td>
 					</tr>
 				</thead>
 				<tbody>';
         if (!empty($main_image) && is_array($main_image)) {
+            $is_thumbnails = $main_image['is_thumbnails'] ? $main_image['is_thumbnails'] : 1;
+            $is_detail = $main_image['is_detail'] ? $main_image['is_detail'] : 1;
+            
             $str .= '<tr class="p_img" rel="1" style="border-bottom:1px solid #ccc;">
 						<td style="width:120px;text-align:center;"><img  rel="'.$main_image['image'].'" style="width:100px;height:100px;" src="'.Yii::$service->product->image->getUrl($main_image['image']).'"></td>
-						<td style="width:220px;text-align:center;"><input style="height:18px;width:200px;" type="text" class="image_label" name="image_label"  value="'.$main_image['label'].'" /></td>
-						<td style="width:220px;text-align:center;"><input style="height:18px;width:200px;" type="text" class="sort_order"  name="sort_order" value="'.$main_image['sort_order'].'"  /></td>
+						<td style="width:220px;text-align:center;"><input  type="text" class="image_label" name="image_label"  value="'.$main_image['label'].'" /></td>
+						<td style="width:220px;text-align:center;"><input  type="text" class="sort_order"  name="sort_order" value="'.$main_image['sort_order'].'"  /></td>
 						<td style="width:30px;text-align:center;"><input type="radio" name="image" checked  value="'.$main_image['image'].'" /></td>
-						<td style="padding:0 0 0 20px;"><a class="delete_img btnDel" href="javascript:void(0)">删除</a></td>
+						
+                        <td style="width:220px;text-align:center;">
+                            <select name="is_thumbnails" class="is_thumbnails">
+                                '.$this->getYesNoOptions($is_thumbnails).'
+                            </select>
+                        </td>
+                        <td style="width:220px;text-align:center;">
+                            <select name="is_detail" class="is_detail">
+                                '.$this->getYesNoOptions($is_detail).'
+                            </select>
+                        </td>
+                        
+                        <td style="padding:0 0 0 20px;"><a class="delete_img btnDel" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
 					</tr>';
         }
         if (!empty($gallery_image) && is_array($gallery_image)) {
             $i = 2;
+            
             foreach ($gallery_image as $gallery) {
+                $is_thumbnails = $gallery['is_thumbnails'] ? $gallery['is_thumbnails'] : 1;
+                $is_detail = $gallery['is_detail'] ? $gallery['is_detail'] : 1;
+            
                 $str .= '<tr class="p_img" rel="'.$i.'" style="border-bottom:1px solid #ccc;">
 									<td style="width:120px;text-align:center;"><img  rel="'.$gallery['image'].'" style="width:100px;height:100px;" src="'.Yii::$service->product->image->getUrl($gallery['image']).'"></td>
-									<td style="width:220px;text-align:center;"><input style="height:18px;width:200px;" type="text" class="image_label" name="image_label"  value="'.$gallery['label'].'" /></td>
-									<td style="width:220px;text-align:center;"><input style="height:18px;width:200px;" type="text" class="sort_order"  name="sort_order" value="'.$gallery['sort_order'].'"  /></td>
+									<td style="width:220px;text-align:center;"><input  type="text" class="image_label" name="image_label"  value="'.$gallery['label'].'" /></td>
+									<td style="width:220px;text-align:center;"><input  type="text" class="sort_order"  name="sort_order" value="'.$gallery['sort_order'].'"  /></td>
 									<td style="width:30px;text-align:center;"><input type="radio" name="image"   value="'.$gallery['image'].'" /></td>
-									<td style="padding:0 0 0 20px;"><a class="delete_img btnDel" href="javascript:void(0)">删除</a></td>
+                                   <td style="width:220px;text-align:center;">
+                                        <select name="is_thumbnails" class="is_thumbnails">
+                                            '.$this->getYesNoOptions($is_thumbnails).'
+                                        </select>
+                                    </td>
+                                    <td style="width:220px;text-align:center;">
+                                        <select name="is_detail" class="is_detail">
+                                            '.$this->getYesNoOptions($is_detail).'
+                                        </select>
+                                    </td>
+									<td style="padding:0 0 0 20px;"><a class="delete_img btnDel" href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
 								</tr>';
                 $i++;
             }
@@ -262,6 +344,20 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
 		</div>';
 
         return $str;
+    }
+    
+    public function getYesNoOptions($val){
+        if($val == 1){
+            return '
+                <option  value="1" selected="selected" >' . Yii::$service->page->translate->__('Yes') . '</option>
+                <option  value="2">' . Yii::$service->page->translate->__('No') . '</option>
+            ';
+        }else{
+            return '
+                <option  value="1">' . Yii::$service->page->translate->__('Yes') . '</option>
+                <option  value="2" selected="selected">' . Yii::$service->page->translate->__('No') . '</option>
+            ';
+        }
     }
 
     public function getCustomOpImgHtml()
@@ -312,18 +408,20 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
                 //exit;
             }
         }
+        
         $this->_service->save($this->_param, 'catalog/product/index');
+        
         $errors = Yii::$service->helper->errors->get();
         if (!$errors) {
             echo  json_encode([
-                'statusCode'=>'200',
-                'message'=>'save success',
+                'statusCode' => '200',
+                'message'    => Yii::$service->page->translate->__('Save Success'),
             ]);
             exit;
         } else {
             echo  json_encode([
-                'statusCode'=>'300',
-                'message'=>$errors,
+                'statusCode' => '300',
+                'message'    => $errors,
             ]);
             exit;
         }
@@ -339,12 +437,22 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
         $custom_option = $custom_option ? json_decode($custom_option, true) : [];
         $custom_option_arr = [];
         if (is_array($custom_option) && !empty($custom_option)) {
-            foreach ($custom_option as $one) {
-                $one['qty'] = (int) $one['qty'];
-                $one['price'] = (float) $one['price'];
-                $custom_option_arr[$one['sku']] = $one;
+            foreach ($custom_option as $option) {
+                if(is_array($option) && !empty($option)){
+                    foreach($option as $key => $val){
+                        if($key == 'qty'){
+                            $option[$key] = (int) $option[$key];
+                        } else if ($key == 'price') {
+                            $option[$key] = (float) $option[$key];
+                        } else {
+                            $option[$key] = html_entity_decode($val);
+                        }
+                    }
+                }
+                $custom_option_arr[$option['sku']] = $option;
             }
         }
+        
         $this->_param['custom_option'] = $custom_option_arr;
         //var_dump($this->_param['custom_option']);
         $image_gallery = CRequest::param('image_gallery');
@@ -374,11 +482,13 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
             if (!empty($image_gallery_arr)) {
                 foreach ($image_gallery_arr as $one) {
                     if (!empty($one)) {
-                        list($gallery_image, $gallery_label, $gallery_sort_order) = explode('#####', $one);
+                        list($gallery_image, $gallery_label, $gallery_sort_order,$gallery_is_thumbnails,$gallery_is_detail) = explode('#####', $one);
                         $save_gallery[] = [
-                            'image'        => $gallery_image,
-                            'label'        => $gallery_label,
-                            'sort_order'    => $gallery_sort_order,
+                            'image'            => $gallery_image,
+                            'label'              => $gallery_label,
+                            'sort_order'      => $gallery_sort_order,
+                            'is_thumbnails' => $gallery_is_thumbnails,
+                            'is_detail'         => $gallery_is_detail,
                         ];
                     }
                 }
@@ -387,16 +497,19 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
         }
         // init image main
         if ($image_main) {
-            list($main_image, $main_label, $main_sort_order) = explode('#####', $image_main);
+            list($main_image, $main_label, $main_sort_order,$main_is_thumbnails,$main_is_detail) = explode('#####', $image_main);
             $save_main = [
-                'image'        => $main_image,
-                'label'        => $main_label,
-                'sort_order'    => $main_sort_order,
+                'image'             => $main_image,
+                'label'               => $main_label,
+                'sort_order'       => $main_sort_order,
+                'is_thumbnails'   => $main_is_thumbnails,
+                'is_detail'          => $main_is_detail,
             ];
             $this->_param['image']['main'] = $save_main;
         }
         //qty
         $this->_param['qty'] = $this->_param['qty'] ? (float) ($this->_param['qty']) : 0;
+        $this->_param['package_number'] = (int)abs($this->_param['package_number']);
         //is_in_stock
         $this->_param['is_in_stock'] = $this->_param['is_in_stock'] ? (int) ($this->_param['is_in_stock']) : 0;
         //price
@@ -410,6 +523,15 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
         $this->_param['special_to'] = $this->_param['special_to'] ? (float) (strtotime($this->_param['special_to'])) : 0;
         //weight
         $this->_param['weight'] = $this->_param['weight'] ? (float) ($this->_param['weight']) : 0;
+        //长
+        $this->_param['long'] = $this->_param['long'] ? (float) ($this->_param['long']) : 0;
+        //宽
+        $this->_param['width'] = $this->_param['width'] ? (float) ($this->_param['width']) : 0;
+        //高
+        $this->_param['high'] = $this->_param['high'] ? (float) ($this->_param['high']) : 0;
+        //体积重
+        $this->_param['volume_weight'] = Yii::$service->shipping->getVolumeWeight($this->_param['long'], $this->_param['width'], $this->_param['high']) ;
+        
         $this->_param['score'] = $this->_param['score'] ? (int) ($this->_param['score']) : 0;
         //status
         $this->_param['status'] = $this->_param['status'] ? (float) ($this->_param['status']) : 0;
@@ -505,14 +627,14 @@ class Manageredit extends AppadminbaseBlockEdit implements AppadminbaseBlockEdit
         $errors = Yii::$service->helper->errors->get();
         if (!$errors) {
             echo  json_encode([
-                'statusCode'=>'200',
-                'message'=>'remove data  success',
+                'statusCode' => '200',
+                'message' => Yii::$service->page->translate->__('Remove Success'),
             ]);
             exit;
         } else {
             echo  json_encode([
-                'statusCode'=>'300',
-                'message'=>$errors,
+                'statusCode' => '300',
+                'message' => $errors,
             ]);
             exit;
         }

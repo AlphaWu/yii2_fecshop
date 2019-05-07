@@ -1,3 +1,12 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="shopping-cart-img">
 	<?= Yii::$service->page->translate->__('Contacts'); ?>
 </div>
@@ -58,13 +67,14 @@
 						</div>
 					</div>
 				</li>
-				<?php if($contactsCaptcha){  ?>
+				<?php if($contactsCaptcha):  ?>
 					<li>
 						<div class="item-content">
 							<div class="item-media"><i class="icon icon-form-password"></i></div>
 							<div class="item-inner">
 								<div class="item-input">
-									<input placeholder="captcha" type="text" name="sercrity_code"  value="" size=10 class="login-captcha-input verification_code_input"><img class="login-captcha-img"  title="<?= Yii::$service->page->translate->__('click refresh'); ?>" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
+									<input placeholder="captcha" type="text" name="sercrity_code"  value="" size=10 class="login-captcha-input verification_code_input">
+                                    <img class="login-captcha-img"  title="<?= Yii::$service->page->translate->__('click refresh'); ?>" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?<?php echo md5(time() . mt_rand(1,10000));?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
 									<span class="icon icon-refresh"></span>
 								</div>
 							</div>
@@ -80,7 +90,7 @@
 						</script>  
 						<?php $this->registerJs($this->blocks['forgot_password_captcha_onclick_refulsh'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
 					</li>
-				<?php } ?>
+				<?php endif; ?>
 			</ul>
 			<div class="clear"></div>
 			<div class="buttons-set">

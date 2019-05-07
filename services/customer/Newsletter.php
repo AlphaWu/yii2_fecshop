@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,26 +10,77 @@
 
 namespace fecshop\services\customer;
 
-use fecshop\models\mongodb\customer\Newsletter as NewsletterModel;
 use fecshop\services\Service;
 use Yii;
 
 /**
- * Address  child services.
+ * Newsletter sub service of customer.
+ * @method subscribe($email, $isRegister = true) see [[\fecshop\services\customer\Newsletter::actionSubscribe()]]
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class Newsletter extends Service
 {
+    public $numPerPage = 20;
+
+    protected $_newsletterModelName = '\fecshop\models\mongodb\customer\Newsletter';
+
+    protected $_newsletterModel;
+    
+    public function init()
+    {
+        parent::init();
+        list($this->_newsletterModelName, $this->_newsletterModel) = Yii::mapGet($this->_newsletterModelName);
+    }
+
+    public function getPrimaryKey()
+    {
+        return '_id';
+    }
+
+    public function getByPrimaryKey($primaryKey)
+    {
+        if ($primaryKey) {
+            return $this->_newsletterModel->findOne($primaryKey);
+        } else {
+            return new $this->_newsletterModelName();
+        }
+    }
+
+    /*
+     * example filter:
+     * [
+     * 		'numPerPage' 	=> 20,
+     * 		'pageNum'		=> 1,
+     * 		'orderBy'	=> ['_id' => SORT_DESC, 'sku' => SORT_ASC ],
+            'where'			=> [
+                ['>','price',1],
+                ['<=','price',10]
+     * 			['sku' => 'uk10001'],
+     * 		],
+     * 	'asArray' => true,
+     * ]
+     */
+    public function coll($filter = '')
+    {
+        $query = $this->_newsletterModel->find();
+        $query = Yii::$service->helper->ar->getCollByFilter($query, $filter);
+
+        return [
+            'coll' => $query->all(),
+            'count'=> $query->limit(null)->offset(null)->count(),
+        ];
+    }
+
     /**
-     * @property $emailAddress | String
+     * @param $emailAddress | String
      * @return bool
      *              检查邮件是否之前被订阅过
      */
     protected function emailIsExist($emailAddress)
     {
-        $primaryKey = NewsletterModel::primaryKey();
-        $one = NewsletterModel::findOne(['email' => $emailAddress]);
+        $primaryKey = $this->_newsletterModel->primaryKey();
+        $one = $this->_newsletterModel->findOne(['email' => $emailAddress]);
         if ($one[$primaryKey]) {
             return true;
         }
@@ -37,11 +89,11 @@ class Newsletter extends Service
     }
 
     /**
-     * @property $emailAddress | String
+     * @param $emailAddress | String
      * @return bool
      *              订阅邮件
      */
-    protected function actionSubscribe($emailAddress)
+    protected function actionSubscribe($emailAddress, $isRegister = false)
     {
         if (!$emailAddress) {
             Yii::$service->helper->errors->add('newsletter email address is empty');
@@ -52,14 +104,19 @@ class Newsletter extends Service
 
             return;
         } elseif ($this->emailIsExist($emailAddress)) {
-            Yii::$service->helper->errors->add('ERROR,Your email address has subscribe , Please do not repeat the subscription');
+            if ($isRegister) {
+                return true;
+            } else {
+                Yii::$service->helper->errors->add('ERROR,Your email address has subscribe , Please do not repeat the subscription');
 
-            return;
+                return;
+            }
         }
-        $newsletterModel = new NewsletterModel();
+        $model = $this->_newsletterModel;
+        $newsletterModel = new $this->_newsletterModelName();
         $newsletterModel->email = $emailAddress;
         $newsletterModel->created_at = time();
-        $newsletterModel->status = NewsletterModel::ENABLE_STATUS;
+        $newsletterModel->status = $model::ENABLE_STATUS;
         $newsletterModel->save();
 
         return true;

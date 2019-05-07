@@ -18,10 +18,23 @@ use Yii;
  */
 class CartController extends AppfrontController
 {
-    public $enableCsrfValidation = false;
+    public $enableCsrfValidation = true;
+    public $noCsrfActions = ['add'];
+
+    public function beforeAction($action)
+    {
+        if(in_array($action->id, $this->noCsrfActions)) {
+            $this->enableCsrfValidation = false;
+        }
+        return parent::beforeAction($action);
+    }
 
     public function actionIndex()
     {
+        if (Yii::$service->store->isAppServerMobile()) {
+            $urlPath = 'checkout/cart';
+            Yii::$service->store->redirectAppServerMobile($urlPath);
+        }
         $data = $this->getBlock()->getLastData();
 
         return $this->render($this->action->id, $data);
@@ -32,7 +45,6 @@ class CartController extends AppfrontController
      */
     public function actionAdd()
     {
-        $this->enableCsrfValidation = true;
         $custom_option = Yii::$app->request->post('custom_option');
         $product_id = Yii::$app->request->post('product_id');
         $qty = Yii::$app->request->post('qty');
@@ -58,7 +70,7 @@ class CartController extends AppfrontController
                 if ($addToCart) {
                     echo json_encode([
                         'status' => 'success',
-                        'items_count' => Yii::$service->cart->quote->getCartItemsCount(),
+                        'items_count' => Yii::$service->cart->quote->getCartItemCount(),
                     ]);
                     $innerTransaction->commit();
                     exit;
@@ -66,13 +78,13 @@ class CartController extends AppfrontController
                     $errors = Yii::$service->helper->errors->get(',');
                     echo json_encode([
                         'status' => 'fail',
-                        'content'=> $errors,
-                        //'items_count' => Yii::$service->cart->quote->getCartItemsCount(),
+                        'content'=> Yii::$service->page->translate->__($errors),
+                        //'items_count' => Yii::$service->cart->quote->getCartItemCount(),
                     ]);
                     $innerTransaction->rollBack();
                     exit;
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $innerTransaction->rollBack();
             }
         }
@@ -103,28 +115,33 @@ class CartController extends AppfrontController
                 } else {
                     $innerTransaction->rollBack();
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $innerTransaction->rollBack();
             }
             $error_arr = Yii::$service->helper->errors->get(true);
             if (!empty($error_arr)) {
-                $error_str = implode(',', $error_arr);
+                if (is_array($error_arr)) {
+                    $error_str = implode(',', $error_arr);
+                } else {
+                    $error_str = $error_arr;
+                }
+                
                 echo json_encode([
                     'status' => 'fail',
-                    'content'=> $error_str,
+                    'content'=> Yii::$service->page->translate->__($error_str),
                 ]);
                 exit;
             } else {
                 echo json_encode([
                     'status' => 'success',
-                    'content'=> 'add coupon success',
+                    'content'=> Yii::$service->page->translate->__('add coupon success'),
                 ]);
                 exit;
             }
         } else {
             echo json_encode([
                 'status' => 'fail',
-                'content'=> 'coupon is empty',
+                'content'=> Yii::$service->page->translate->__('coupon is empty'),
             ]);
             exit;
         }
@@ -153,7 +170,7 @@ class CartController extends AppfrontController
                 if (!$cancelStatus) {
                     echo json_encode([
                         'status' => 'fail',
-                        'content'=> 'coupon is not exist;',
+                        'content'=> Yii::$service->page->translate->__('coupon is not exist'),
                     ]);
                     $innerTransaction->rollBack();
                     exit;
@@ -170,18 +187,18 @@ class CartController extends AppfrontController
                 } else {
                     echo json_encode([
                         'status' => 'success',
-                        'content'=> 'cacle coupon success',
+                        'content'=> Yii::$service->page->translate->__('cacle coupon success'),
                     ]);
                     $innerTransaction->commit();
                     exit;
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $innerTransaction->rollBack();
             }
         } else {
             echo json_encode([
                 'status' => 'fail',
-                'content'=> 'coupon is empty',
+                'content'=> Yii::$service->page->translate->__('coupon is empty'),
             ]);
             exit;
         }
@@ -189,8 +206,8 @@ class CartController extends AppfrontController
 
     public function actionUpdateinfo()
     {
-        $item_id = Yii::$app->request->get('item_id');
-        $up_type = Yii::$app->request->get('up_type');
+        $item_id = Yii::$app->request->post('item_id');
+        $up_type = Yii::$app->request->post('up_type');
         $innerTransaction = Yii::$app->db->beginTransaction();
         try {
             if ($up_type == 'add_one') {
@@ -208,11 +225,65 @@ class CartController extends AppfrontController
             } else {
                 echo json_encode([
                     'status' => 'fail',
+                    'content' => Yii::$service->helper->errors->get(',')
                 ]);
                 $innerTransaction->rollBack();
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $innerTransaction->rollBack();
         }
+        exit;
     }
+    
+    public function actionSelectone()
+    {
+        $item_id = Yii::$app->request->post('item_id');
+        $checked = Yii::$app->request->post('checked');
+        $checked = $checked == 1 ? true : false; 
+        $innerTransaction = Yii::$app->db->beginTransaction();
+        try {
+            $status = Yii::$service->cart->selectOneItem($item_id, $checked);
+            if ($status) {
+                echo json_encode([
+                    'status' => 'success',
+                ]);
+                $innerTransaction->commit();
+            } else {
+                echo json_encode([
+                    'status' => 'fail',
+                    'content' => Yii::$service->helper->errors->get(',')
+                ]);
+                $innerTransaction->rollBack();
+            }
+        } catch (\Exception $e) {
+            $innerTransaction->rollBack();
+        }
+        exit;
+    }
+    
+    public function actionSelectall()
+    {
+        $checked = Yii::$app->request->post('checked');
+        $checked = $checked == 1 ? true : false; 
+        $innerTransaction = Yii::$app->db->beginTransaction();
+        try {
+            $status = Yii::$service->cart->selectAllItem($checked);
+            if ($status) {
+                echo json_encode([
+                    'status' => 'success',
+                ]);
+                $innerTransaction->commit();
+            } else {
+                echo json_encode([
+                    'status' => 'fail',
+                    'content' => Yii::$service->helper->errors->get(',')
+                ]);
+                $innerTransaction->rollBack();
+            }
+        } catch (\Exception $e) {
+            $innerTransaction->rollBack();
+        }
+        exit;
+    }
+    
 }

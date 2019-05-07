@@ -34,8 +34,8 @@ $cssOptions = [
 		],
 	],
 ];
-\Yii::$service->page->asset->jsOptions 	= $jsOptions;
-\Yii::$service->page->asset->cssOptions = $cssOptions;				
+\Yii::$service->page->asset->jsOptions 	= \yii\helpers\ArrayHelper::merge($jsOptions, \Yii::$service->page->asset->jsOptions);
+\Yii::$service->page->asset->cssOptions = \yii\helpers\ArrayHelper::merge($cssOptions, \Yii::$service->page->asset->cssOptions);				
 \Yii::$service->page->asset->register($this);
 ?>
 <?php $this->beginPage() ?>
@@ -45,18 +45,20 @@ $cssOptions = [
 <?= Yii::$service->page->widget->render('head',$this); ?>
 </head>
 <body>
+<?= Yii::$service->page->widget->render('beforeContent',$this); ?>
 <?php $this->beginBody() ?>
 	<header id="header">
 		<?= Yii::$service->page->widget->render('header',$this); ?>
 		<?= Yii::$service->page->widget->render('menu',$this); ?>
 	</header>
-	
+    
 	<div class="main-container">
 		<?= $content; ?>
 	</div>
 	<div class="footer-container">
 		<?= Yii::$service->page->widget->render('footer',$this); ?>
 	</div>
+    <?= Yii::$service->page->widget->render('trace',$this); ?>
 	<?= Yii::$service->page->widget->render('scroll',$this); ?>
 <?php $this->endBody() ?>
 </body>

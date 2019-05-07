@@ -24,7 +24,22 @@ class Review extends ActiveRecord
     const ACTIVE_STATUS = 1;
     // 审核拒绝的状态
     const REFUSE_STATUS = 2;
-
+    
+    
+    public function getActiveStatus(){
+        return self::ACTIVE_STATUS;
+    }
+    
+    public function getNoActiveStatus(){
+        return self::NOACTIVE_STATUS;
+    }
+    
+    public function getRefuseStatus(){
+        return self::REFUSE_STATUS;
+    }
+    /**
+     * mongodb collection 的名字，相当于mysql的table name
+     */
     public static function collectionName()
     {
         return 'review';
@@ -35,7 +50,10 @@ class Review extends ActiveRecord
     {
         self::$_customAttrs = $attrs;
     }
-
+    /**
+     * mongodb是没有表结构的，因此不能像mysql那样取出来表结构的字段作为model的属性
+     * 因此，需要自己定义model的属性，下面的方法就是这个作用
+     */
     public function attributes($origin = false)
     {
         $origin = [
@@ -56,16 +74,18 @@ class Review extends ActiveRecord
             'audit_user',        // 审核账号
             'audit_date',        // 审核时间
         ];
-        if ($origin) { // 取原始的数据
-            return $origin;
-        }
         if (is_array(self::$_customAttrs) && !empty(self::$_customAttrs)) {
             $origin = array_merge($origin, self::$_customAttrs);
         }
 
         return $origin;
     }
-
+    /**
+     * 给model对应的表创建索引的方法
+     * 在indexs数组中填写索引，如果有多个索引，可以填写多行
+     * 在migrate的时候会运行创建索引，譬如：
+     * @fecshop/migrations/mongodb/m170228_072455_fecshop_tables
+     */
     public static function create_index()
     {
         $indexs = [

@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -10,12 +11,14 @@
 namespace fecshop\services\email;
 
 use Yii;
+use fecshop\services\Service;
 
 /**
+ * customer email services
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
-class Customer
+class Customer extends Service
 {
     /**
      * 邮件模板部分配置.
@@ -23,8 +26,11 @@ class Customer
     public $emailTheme;
 
     /**
-     * @property $toEmail | String   send to email address.
-     * 客户注册用户发送邮件
+     * @param $emailInfo | Array  ，数组格式格式如下：
+     * [ 'email' => 'xx@xx.com' , [...] ] 其中email是必须有的数组key，对于其他的，
+     * 可以根据功能添加，添加后，可以在邮件模板的$params中调用，譬如调用email为 $params['email']
+     * @return boolean , 如果发送成功，则返回true。
+     * 该功能为：给客户注册用户发送邮件，使用该函数的格式如下：
      * Yii::$service->email->customer->sendRegisterEmail($emailInfo);
      */
     public function sendRegisterEmail($emailInfo)
@@ -58,7 +64,10 @@ class Customer
     }
 
     /**
-     * @property $emailInfo | Array
+     * @param $emailInfo | Array  ，数组格式格式如下：
+     * [ 'email' => 'xx@xx.com' , [...] ] 其中email是必须有的数组key，对于其他的，
+     * 可以根据功能添加，添加后，可以在邮件模板的$params中调用，譬如调用email为 $params['email']
+     * @return boolean , 如果发送成功，则返回true。
      * 客户登录账号发送邮件
      */
     public function sendLoginEmail($emailInfo)
@@ -92,7 +101,10 @@ class Customer
     }
 
     /**
-     * @property $emailInfo | Array
+     * @param $emailInfo | Array  ，数组格式格式如下：
+     * [ 'email' => 'xx@xx.com' , [...] ] 其中email是必须有的数组key，对于其他的，
+     * 可以根据功能添加，添加后，可以在邮件模板的$params中调用，譬如调用email为 $params['email']
+     * @return boolean , 如果发送成功，则返回true。
      * 客户忘记秒发送的邮件
      */
     public function sendForgotPasswordEmail($emailInfo)
@@ -137,7 +149,10 @@ class Customer
     }
 
     /**
-     * @property $emailInfo | Array ， 数组
+     * @param $emailInfo | Array  ，数组格式格式如下：
+     * [ 'email' => 'xx@xx.com' , [...] ] 其中email是必须有的数组key，对于其他的，
+     * 可以根据功能添加，添加后，可以在邮件模板的$params中调用，譬如调用email为 $params['email']
+     * @return boolean , 如果发送成功，则返回true。
      * 客户联系我们邮件。
      */
     public function sendContactsEmail($emailInfo)
@@ -176,7 +191,10 @@ class Customer
     }
 
     /**
-     * @property $emailInfo | Array ， 数组。
+     * @param $emailInfo | Array  ，数组格式格式如下：
+     * [ 'email' => 'xx@xx.com' , [...] ] 其中email是必须有的数组key，对于其他的，
+     * 可以根据功能添加，添加后，可以在邮件模板的$params中调用，譬如调用email为 $params['email']
+     * @return boolean , 如果发送成功，则返回true。
      * 订阅邮件成功邮件
      */
     public function sendNewsletterSubscribeEmail($emailInfo)

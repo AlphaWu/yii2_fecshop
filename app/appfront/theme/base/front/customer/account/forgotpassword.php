@@ -1,6 +1,15 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="main container one-column">
-<?= Yii::$service->page->widget->render('flashmessage'); ?>
-
+    <?= Yii::$service->page->widget->render('breadcrumbs',$this); ?>
+    <?= Yii::$service->page->widget->render('flashmessage'); ?>
 	<div class="account-create">
 		<div class="page-title">
 			<h1><?= Yii::$service->page->translate->__('Forgot Password'); ?></h1>
@@ -18,13 +27,13 @@
 						</div>
 					</li>
 					
-					<?php  if($forgotCaptcha){   ?>
+					<?php  if($forgotCaptcha):   ?>
 					<li>
 						<div class="field">
                             <label for="captcha" class="required"><em>*</em><?= Yii::$service->page->translate->__('Captcha'); ?></label>
                             <div  class="input-box forgot-captha register-captcha ">
 								<input type="text" name="editForm[captcha]" value="" size=10 class="login-captcha-input required-entry"> 
-								<img class="login-captcha-img"  title="click refresh" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
+								<img class="login-captcha-img"  title="click refresh" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?<?php echo md5(time() . mt_rand(1,10000));?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
 								<i class="refresh-icon"></i>
 								<div class="clear"></div>
                             </div>
@@ -42,7 +51,7 @@
                         </div>
 						
                     </li>
-					<?php }  ?>
+					<?php endif;  ?>
 				</ul>
 			</div>
 			
@@ -60,7 +69,6 @@
 <?php 
 $requiredValidate 			= 'This is a required field.';
 $emailFormatValidate 		= 'Please enter a valid email address. For example johndoe@domain.com.';
-
 ?>
 <script>
 <?php $this->beginBlock('forgot_password') ?>  

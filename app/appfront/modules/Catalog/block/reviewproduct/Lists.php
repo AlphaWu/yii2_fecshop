@@ -9,7 +9,7 @@
 
 namespace fecshop\app\appfront\modules\Catalog\block\reviewproduct;
 
-use fecshop\app\appfront\modules\Catalog\helpers\Review as ReviewHelper;
+//use fecshop\app\appfront\modules\Catalog\helpers\Review as ReviewHelper;
 use Yii;
 
 /**
@@ -25,12 +25,25 @@ class Lists
     public $_page = 'p';
     public $numPerPage = 20;
     public $pageNum;
+    /**
+     * 为了可以使用rewriteMap，use 引入的文件统一采用下面的方式，通过Yii::mapGet()得到className和Object
+     */
+    protected $_reviewHelperName = '\fecshop\app\appfront\modules\Catalog\helpers\Review';
+    protected $_reviewHelper;
 
     public function __construct()
     {
-        ReviewHelper::initReviewConfig();
+        /**
+         * 通过Yii::mapGet() 得到重写后的class类名以及对象。Yii::mapGet是在文件@fecshop\yii\Yii.php中
+         */
+        list($this->_reviewHelperName,$this->_reviewHelper) = Yii::mapGet($this->_reviewHelperName);  
+        $reviewHelper = $this->_reviewHelper;
+        $reviewHelper::initReviewConfig();
     }
-
+    /**
+     * @param $countTotal | Int
+     * 得到toolbar的分页部分
+     */
     protected function getProductPage($countTotal)
     {
         if ($countTotal <= $this->numPerPage) {
@@ -47,7 +60,7 @@ class Lists
 
         return Yii::$service->page->widget->renderContent('category_product_page', $config);
     }
-
+    // 初始化参数
     public function initParam()
     {
         $this->pageNum = Yii::$app->request->get($this->_page);
@@ -63,7 +76,8 @@ class Lists
     {
         $this->initParam();
         if (!$this->spu || !$this->product_id) {
-            return;
+            Yii::$service->page->message->addError('param spu and _id is require');
+            return [];
         }
         $product = Yii::$service->product->getByPrimaryKey($this->product_id);
         if (!$product['spu']) {
@@ -84,27 +98,33 @@ class Lists
 
             $pageToolBar = $this->getProductPage($count);
             $coll = $data['coll'];
-            $ReviewAndStarCount = ReviewHelper::getReviewAndStarCount($product);
-            list($review_count, $reviw_rate_star_average) = $ReviewAndStarCount;
+            $reviewHelper = $this->_reviewHelper;
+            $ReviewAndStarCount = $reviewHelper::getReviewAndStarCount($product);
+            list($review_count, $reviw_rate_star_average, $reviw_rate_star_info)  = $ReviewAndStarCount;
 
             return [
-                '_id' => $this->product_id,
-                'spu' => $this->spu,
-                'review_count'                => $review_count,
+                '_id'    => $this->product_id,
+                'spu'   => $this->spu,
+                'review_count'               => $review_count,
                 'reviw_rate_star_average'    => $reviw_rate_star_average,
-                'pageToolBar'    => $pageToolBar,
-                'coll'            => $coll,
-                'noActiveStatus'=> Yii::$service->product->review->noActiveStatus(),
-                'addReviewUrl'    => $addReviewUrl,
-                'name'            => $name,
-                'price_info'    => $price_info,
-                'main_img'        => $main_img,
-                'editForm'        => $editForm,
-                'url'        => Yii::$service->url->getUrl($url_key),
+                'reviw_rate_star_info'       => $reviw_rate_star_info,
+                'pageToolBar'       => $pageToolBar,
+                'coll'              => $coll,
+                'noActiveStatus'    => Yii::$service->product->review->noActiveStatus(),
+                'addReviewUrl'      => $addReviewUrl,
+                'name'              => $name,
+                'price_info'        => $price_info,
+                'main_img'          => $main_img,
+                'editForm'          => $editForm,
+                'url'               => Yii::$service->url->getUrl($url_key),
             ];
         }
+        return [];
     }
-
+    /**
+     * @param $spu  | String
+     * 通过spu得到产品评论
+     */
     public function getReviewsBySpu($spu)
     {
         $currentIp = \fec\helpers\CFunc::get_real_ip();
@@ -131,7 +151,7 @@ class Lists
 
         return Yii::$service->product->review->getListBySpu($filter);
     }
-
+    // 产品价格信息
     protected function getProductPriceInfo($product)
     {
         $price = $product['price'];

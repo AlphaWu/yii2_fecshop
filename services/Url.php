@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -12,19 +13,33 @@ namespace fecshop\services;
 use Yii;
 
 /**
+ * Url Services
+ *
+ * @property \fecshop\services\url\Category $category category sub-service of url
+ * @property \fecshop\services\url\Rewrite $rewrite rewrite sub-service of url
+ *
+ * Url Service
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class Url extends Service
 {
     public $randomCount = 8;
+
     public $showScriptName;
+
     protected $_secure;
+
     protected $_currentBaseUrl;
+
     protected $_origin_url;
+
     protected $_httpType;
+
     protected $_baseUrl;
+
     protected $_currentUrl;
+
     /**
      * About: 对于 \yii\helpers\CUrl 已经 封装了一些对url的操作，也就是基于yii2的url机制进行的
      * 但是对于前端并不适用，对于域名当首页http://xx.com这类url是没有问题，但是，
@@ -57,9 +72,7 @@ class Url extends Service
                 'origin_url'        => $originUrl,
             ])->one();
             if (isset($data_one['custom_url_key'])) {
-                /*
-                 * 只要进行了查询，就要更新一下rewrite url表的updated_at.
-                 */
+                // 只要进行了查询，就要更新一下rewrite url表的updated_at.
                 $data_one->updated_at = time();
                 $data_one->save();
 
@@ -95,30 +108,38 @@ class Url extends Service
     }
 
     /**
-     * @property $url_key|string
+     * @param $url_key|string
      * remove url rewrite data by $url_key,which is custom url key that saved in custom url modules,like articcle , product, category ,etc..
      */
     protected function actionRemoveRewriteUrlKey($url_key)
     {
         $model = $this->findOne([
-                'custom_url_key' => $url_key,
-            ]);
+            'custom_url_key' => $url_key,
+        ]);
         if ($model['custom_url_key']) {
             $model->delete();
         }
     }
 
     /**
-     * get current url.
+     * 得到当前的url，使用的是php的方式，而不是Yii2的函数
+     * 对于Yii框架得到当前的url使用：\yii\helpers\BaseUrl::current([],true)
+     * 这里没有使用的原因是，因为fecshop存在url rewrite，在初始化的时候，会将当前的url转换成yii2框架的url
+     * 当前函数返回的url，是浏览器地址栏中的当前url，而\yii\helpers\BaseUrl::current([],true) 返回的yii2框架中的url
+     * 这个要分清楚使用
+     * 譬如分类页面的url，进行了url rewrite：http://fecshop.appfront.fancyecommerce.com/men
+     * 1.函数`\yii\helpers\BaseUrl::current([],true)`的输出为：http://fecshop.appfront.fancyecommerce.com/catalog/category/index?_id=57b6ac42f656f246653bf576
+     * 2.而当前函数`getCurrentUrl()`的输出为：http://fecshop.appfront.fancyecommerce.com/men
+     * 3.关于fecshop url rewrite，详细参看：http://www.fecshop.com/doc/fecshop-guide/instructions/cn-1.0/guide-fecshop_url_rewrite.html
      */
-    protected function actionGetCurrentUrl()
+    public function getCurrentUrl()
     {
         if (!$this->_currentUrl) {
-            $pageURL = '//';
-            $pageURL .= $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
-            $this->_currentUrl = $pageURL;
+            $secure = Yii::$app->getRequest()->getIsSecureConnection();
+            $http = $secure ? 'https' : 'http';
+            $this->_currentUrl = $http . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
         }
-
+        
         return $this->_currentUrl;
     }
 
@@ -133,7 +154,7 @@ class Url extends Service
     }
 
     /**
-     *  @property $urlKey|string
+     *  @param $urlKey|string
      *  get $origin_url by $custom_url_key ,it is used for yii2 init,
      *  in (new fecshop\services\Request)->resolveRequestUri(),  ## fecshop\services\Request is extend  yii\web\Request
      */
@@ -143,12 +164,12 @@ class Url extends Service
     }
 
     /**
-     * @property $url_key | String  urlKey的值
-     * @property $params | Array 。url里面个各个参数
-     * @property https | boolean 是否使用https的方式
-     * @property $domain | String ， 相应的域名，譬如www.fecshop.com
+     * @param $url_key | String  urlKey的值
+     * @param $params | Array 。url里面个各个参数
+     * @param https | boolean 是否使用https的方式
+     * @param $domain | String ， 相应的域名，譬如www.fecshop.com
      * @proeprty $showScriptName | boolean，是否在url中包含index.php/部分
-     * @property $useHttpForUrl | boolean ，是否在url中加入http部分、
+     * @param $useHttpForUrl | boolean ，是否在url中加入http部分、
      * 通过传入domain的方式得到相应的url
      * 该功能一般是在脚本中通过各个域名的传入得到相应的url，譬如sitemap的生成就是应用了这个方法得到
      * 产品和分类的url。
@@ -187,7 +208,7 @@ class Url extends Service
     }
 
     /**
-     * @property $path|String, for example about-us.html,  fashion-handbag/women.html
+     * @param $path|String, for example about-us.html,  fashion-handbag/women.html
      * genarate current store url by path.
      * example:
      * Yii::$service->url->getUrlByPath('cms/article/index?id=33');
@@ -238,7 +259,7 @@ class Url extends Service
     /**
      * get current home url , is was generate by 'http://'.store_code.
      */
-    protected function actionHomeUrl()
+    public function homeUrl()
     {
         return Yii::$app->getHomeUrl();
     }
@@ -352,7 +373,9 @@ class Url extends Service
      */
     protected function generateUrlByName($name)
     {
+        setlocale(LC_ALL, '');
         $url = iconv('UTF-8', 'ASCII//TRANSLIT', $name);
+
         $url = preg_replace('{[^a-zA-Z0-9_.| -]}', '', $url);
         $url = strtolower(trim($url, '-'));
         $url = preg_replace('{[_| -]+}', '-', $url);
@@ -363,9 +386,9 @@ class Url extends Service
     }
 
     /**
-     * @property $url|string  要处理的url ， 一般是当前的url
-     * @property $removeUrlParamStr|string  在url中删除的部分，一般是某个key对应的某个val，譬如color=green
-     * @property $backToPage1|bool  删除后，页数由原来的页数变成第一页？
+     * @param $url|string  要处理的url ， 一般是当前的url
+     * @param $removeUrlParamStr|string  在url中删除的部分，一般是某个key对应的某个val，譬如color=green
+     * @param $backToPage1|bool  删除后，页数由原来的页数变成第一页？
      */
     protected function actionRemoveUrlParamVal($url, $removeUrlParamStr, $backToPage1 = true)
     {
@@ -420,6 +443,15 @@ class Url extends Service
             Yii::$app->getResponse()->redirect($homeUrl)->send();
             //session_commit();
             //header("Location: $homeUrl");
+        }
+    }
+    
+    protected function actionRedirect404()
+    {
+        $error404UrlKey = Yii::$app->errorHandler->errorAction;
+        $error404Url    = $this->getUrl($error404UrlKey);
+        if ($error404Url) {
+            Yii::$app->getResponse()->redirect($error404Url)->send();
         }
     }
 }

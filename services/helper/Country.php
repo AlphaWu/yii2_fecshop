@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -20,6 +21,9 @@ class Country extends Service
 {
     public $default_country;
 
+    /**
+     * 得到默认的国家
+     */
     public function getDefaultCountry()
     {
         if (!$this->default_country) {
@@ -29,6 +33,9 @@ class Country extends Service
         return $this->default_country;
     }
 
+    /**
+     * 通过国家，得到省的option html的字符串
+     */
     public function getStateOptionsByContryCode($CountryCode, $selected = '')
     {
         if (!$CountryCode) {
@@ -55,7 +62,9 @@ class Country extends Service
         return $str;
     }
 
-    //得到所有国家的option
+    /**
+     * 得到所有国家的option
+     */
     public function getAllCountryOptions($name = 'country', $class = 'country', $current = '', $nullShow = '')
     {
         $all_country_array = $this->getAllCountryArray();
@@ -81,6 +90,9 @@ class Country extends Service
         return $str;
     }
 
+    /**
+     * 通过国家简码得到国家的全称名字
+     */
     public function getCountryNameByKey($key)
     {
         $all_country = $this->getAllCountryArray();
@@ -88,7 +100,10 @@ class Country extends Service
         return isset($all_country[$key]) ? $all_country[$key] : $key;
     }
 
-    public static function getCountryOptionsHtml($selectd = '')
+    /**
+     * 国家option html
+     */
+    public function getCountryOptionsHtml($selectd = '')
     {
         if (!$selectd) {
             $selectd = $this->getDefaultCountry();
@@ -108,8 +123,8 @@ class Country extends Service
     }
 
     /**
-     * @property $countryCode |String 国家简码
-     * @property $stateCode | String 省市简码
+     * @param $countryCode |String 国家简码
+     * @param $stateCode | String 省市简码
      * @return string OR Array 如果不传递省市简码，那么返回的是该国家对应的省市数组
      *                如果传递省市简码，传递的是省市的名称
      */

@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -10,7 +11,7 @@
 namespace fecshop\services;
 
 /**
- * Blog.
+ * Blog. 博客部分功能，未做。
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */

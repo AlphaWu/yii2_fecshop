@@ -1,37 +1,46 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="tb_rg">
-	<?php  if($prevPage){  ?>
-		<a href="<?= $prevPage['url']['url'] ?>"><</a>
-	<?php }else{  ?>
+	<?php  if($prevPage):  ?>
+		<a external href="<?= $prevPage['url']['url'] ?>"><</a>
+	<?php else:  ?>
 		<span><</span>
-	<?php }  ?>	
-	<?php if($firstSpaceShow){  ?>
-		<a href="<?= $firstSpaceShow['url']['url'] ?>"><?= $firstSpaceShow['p'] ?></a>
-	<?php }  ?>	
+	<?php endif;  ?>	
+	<?php if($firstSpaceShow):  ?>
+		<a external href="<?= $firstSpaceShow['url']['url'] ?>"><?= $firstSpaceShow['p'] ?></a>
+	<?php endif;  ?>	
 	<?= $hiddenFrontStr ?>		
-	<?php  if(!empty($frontPage )){ ?>
-		<?php foreach($frontPage as $page){ ?>
-			<a href="<?= $page['url']['url'] ?>"><?= $page['p'] ?></a>
-		<?php }  ?>	
-	<?php }  ?>	
+	<?php  if(!empty($frontPage )): ?>
+		<?php foreach($frontPage as $page): ?>
+			<a external href="<?= $page['url']['url'] ?>"><?= $page['p'] ?></a>
+		<?php endforeach;  ?>	
+	<?php endif;  ?>	
 	
-	<?php if($currentPage){ ?>
+	<?php if($currentPage): ?>
 		<span class="current" ><?= $currentPage['p'] ?></span>
-	<?php }  ?>	
+	<?php endif;  ?>	
 	
-	<?php  if(!empty($behindPage )){ ?>
-		<?php foreach($behindPage as $page){ ?>
-			<a href="<?= $page['url']['url'] ?>"><?= $page['p'] ?></a>
-		<?php }  ?>	
-	<?php }  ?>		
+	<?php  if(!empty($behindPage )): ?>
+		<?php foreach($behindPage as $page): ?>
+			<a external href="<?= $page['url']['url'] ?>"><?= $page['p'] ?></a>
+		<?php endforeach;  ?>	
+	<?php endif;  ?>		
 		
 	<?= $hiddenBehindStr ?>			
-	<?php if($lastSpaceShow){ ?>
-		<a href="<?= $lastSpaceShow['url']['url'] ?>"><?= $lastSpaceShow['p'] ?></a>
-	<?php }  ?>	
-	<?php  if($nextPage){  ?>
-		<a href="<?= $nextPage['url']['url'] ?>">></a>
-	<?php }else{  ?>
+	<?php if($lastSpaceShow): ?>
+		<a external href="<?= $lastSpaceShow['url']['url'] ?>"><?= $lastSpaceShow['p'] ?></a>
+	<?php endif;  ?>	
+	<?php if($nextPage):  ?>
+		<a external href="<?= $nextPage['url']['url'] ?>">></a>
+	<?php else:  ?>
 		<span>></span>
-	<?php }  ?>	
-	</div>
+	<?php endif;  ?>	
+</div>
 	

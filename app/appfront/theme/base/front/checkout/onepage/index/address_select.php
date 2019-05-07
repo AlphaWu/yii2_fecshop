@@ -1,3 +1,12 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <?php  $address_list = $parentThis['address_list'];   ?>
 <?php  $cart_address_id = $parentThis['cart_address_id'];   ?>
 <?php  $country_select = $parentThis['country_select'];   ?>
@@ -7,23 +16,23 @@
 <div id="billing_address">		
 	<ul>
 		<li>
-			<p class="onestepcheckout-numbers onestepcheckout-numbers-1"><?= Yii::$service->page->translate->__('Billing address');?></p>
+			<p class="onestepcheckout-numbers onestepcheckout-numbers-1"><?= Yii::$service->page->translate->__('Shipping Address');?></p>
 		</li>
 		<li>
 			<div>
 				<select name="address_id" class="address_list">
-					<?php  	if(is_array($address_list) && !empty($address_list)){    ?>
-					<?php  	foreach($address_list as $address_id => $info){  ?>
-					<?php  	if($cart_address_id == $address_id ){ 
-								$str = 'selected="true;"';
-							}else{  
-								$str = ''; 
-							}
+					<?php  	if(is_array($address_list) && !empty($address_list)):    ?>
+					<?php  	    foreach($address_list as $address_id => $info):  ?>
+					<?php  	        if($cart_address_id == $address_id ): 
+                                        $str = 'selected="true;"';
+                                    else:  
+                                        $str = ''; 
+                                    endif;
 					?>
 					<option <?= $str  ?> value="<?= $address_id ?>"><?= $info['address'] ?></option>
 					
-					<?php  }  ?>
-					<?php  }  ?>
+					<?php       endforeach;  ?>
+					<?php  endif;  ?>
 					<option value=""> <?= Yii::$service->page->translate->__('New Address');?> </option>
 				</select>
 				<ul id="billing_address_list" class="billing_address_list_new" style="display:none;">			
@@ -47,7 +56,7 @@
 							</div>
 						</div>
 					</li>
-					<li>
+					<li class="clearfix">
 						<div style="width:100%;" class="input-box input-telephone">
 							<label for="billing:telephone"><?= Yii::$service->page->translate->__('Telephone');?> <span class="required">*</span></label>
 							<input style="width:83%;" value="<?= $cart_address['telephone'] ?>" id="billing:telephone" class="required-entry input-text" title="Telephone" name="billing[telephone]" type="text">

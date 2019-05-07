@@ -18,16 +18,20 @@ use Yii;
  */
 class ExpressController extends AppfrontController
 {
-    public $enableCsrfValidation = true;
+    public $enableCsrfValidation = false;
 
     public function actionStart()
     {
-        $data = $this->getBlock()->startExpress();
+        $payment_method = Yii::$service->payment->paypal->express_payment_method;
+        Yii::$service->payment->setPaymentMethod($payment_method);
+        $data = $this->getBlock()->startPayment();
     }
 
     // 2.Review  从paypal确认后返回
     public function actionReview()
     {
+        $payment_method = Yii::$service->payment->paypal->express_payment_method;
+        Yii::$service->payment->setPaymentMethod($payment_method);
         $_csrf = Yii::$app->request->post('_csrf');
         if ($_csrf) {
             $status = $this->getBlock('placeorder')->getLastData();
@@ -41,5 +45,28 @@ class ExpressController extends AppfrontController
         } else {
             return $data;
         }
+    }
+    
+    
+    public function actionIpn()
+    {
+        \Yii::info('paypal ipn begin express', 'fecshop_debug');
+        $payment_method = Yii::$service->payment->paypal->express_payment_method;
+        Yii::$service->payment->setPaymentMethod($payment_method);
+        $post = Yii::$app->request->post();
+        if (is_array($post) && !empty($post)) {
+            $post = \Yii::$service->helper->htmlEncode($post);
+            ob_start();
+            ob_implicit_flush(false);
+            var_dump($post);
+            $post_log = ob_get_clean();
+            \Yii::info($post_log, 'fecshop_debug');
+            Yii::$service->payment->paypal->receiveIpn($post);
+        }
+    }
+    
+    public function actionCancel()
+    {
+        return Yii::$service->url->redirectByUrlKey('checkout/onepage');
     }
 }

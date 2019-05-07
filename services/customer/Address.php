@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,7 +10,7 @@
 
 namespace fecshop\services\customer;
 
-use fecshop\models\mysqldb\customer\Address as MyAddress;
+//use fecshop\models\mysqldb\customer\Address as MyAddress;
 use fecshop\services\Service;
 use Yii;
 
@@ -21,37 +22,53 @@ use Yii;
 class Address extends Service
 {
     protected $currentCountry;
+
     protected $currentState;
 
+    protected $_addressModelName = '\fecshop\models\mysqldb\customer\Address';
+
+    protected $_addressModel;
+    
+    public function init()
+    {
+        parent::init();
+        list($this->_addressModelName, $this->_addressModel) = \Yii::mapGet($this->_addressModelName);
+    }
+    
     protected function actionGetPrimaryKey()
     {
         return 'address_id';
     }
 
     /**
-     * @property $primaryKey | Int
+     * @param $primaryKey | Int
      * @return Object(MyCoupon)
-     *                          通过id找到cupon的对象
+     *                          通过id找到customer address的对象
      */
     protected function actionGetByPrimaryKey($primaryKey)
     {
-        $one = MyAddress::findOne($primaryKey);
+        $one = $this->_addressModel->findOne($primaryKey);
         $primaryKey = $this->getPrimaryKey();
         if ($one[$primaryKey]) {
             return $one;
         } else {
-            return new MyAddress();
+            return new $this->_addressModelName();
         }
     }
 
+    /**
+     * @param $address_id | Int , address表的id
+     * @param $customer_id | Int ， 用户id
+     * 在这里在主键查询的同时，加入customer_id，这样查询的肯定是这个用户的，
+     * 这样就防止有的用户去查询其他用户的address信息。
+     */
     protected function actionGetAddressByIdAndCustomerId($address_id, $customer_id)
     {
         $primaryKey = $this->getPrimaryKey();
-        $one = MyAddress::findOne([
+        $one = $this->_addressModel->findOne([
             $primaryKey    => $address_id,
             'customer_id'    => $customer_id,
         ]);
-
         if ($one[$primaryKey]) {
             return $one;
         } else {
@@ -60,43 +77,38 @@ class Address extends Service
     }
 
     /**
-     * @property $filter|array
+     * @param $filter|array
      * @return Array;
-     *                通过过滤条件，得到coupon的集合。
-     *                example filter:
-     *                [
-     *                'numPerPage' 	=> 20,
-     *                'pageNum'		=> 1,
-     *                'orderBy'	=> ['_id' => SORT_DESC, 'sku' => SORT_ASC ],
-     'where'			=> [
-     ['>','price',1],
-     ['<=','price',10]
-     * 			['sku' => 'uk10001'],
-     * 		],
+     *  通过过滤条件，得到coupon的集合。
+     *  example filter:
+     *  [
+     *  'numPerPage' 	=> 20,
+     *  'pageNum'		=> 1,
+     *  'orderBy'	=> ['_id' => SORT_DESC, 'sku' => SORT_ASC ],
+     *  'where'			=> [
+     *      ['>','price',1],
+     *      ['<=','price',10]
+     * 		['sku' => 'uk10001'],
+     * 	],
      * 	'asArray' => true,
-     * ]
+     *  ]
      */
     protected function actionColl($filter = '')
     {
-        $query = MyAddress::find();
+        $query = $this->_addressModel->find();
         $query = Yii::$service->helper->ar->getCollByFilter($query, $filter);
         $coll = $query->all();
-        if (!empty($coll)) {
-            foreach ($coll as $k => $one) {
-                $coll[$k] = $one;
-            }
-        }
-        //var_dump($one);
+        
         return [
             'coll' => $coll,
-            'count'=> $query->count(),
+            'count'=> $query->limit(null)->offset(null)->count(),
         ];
     }
-
-    protected function actionCurrentAddress()
-    {
-    }
-
+    
+    /**
+     * @return Array
+     * 得到当前用户的所有货运地址数组
+     */
     protected function actionCurrentAddressList()
     {
         $arr = [];
@@ -157,59 +169,70 @@ class Address extends Service
     }
 
     /**
-     * @property $one|array , save one data .
-     * @return int 保存coupon成功后，返回保存的id。
-     *             example $one = [
+     * @param $one|array , 保存的address数组
+     * @return int 返回保存的 address_id 的值。
      */
     protected function actionSave($one)
     {
-        $time = time();
+        if (!is_array($one) || empty($one)) {
+            Yii::$service->helper->errors->add('address data is empty');
+
+            return false;
+        }
         $primaryKey = $this->getPrimaryKey();
         $primaryVal = isset($one[$primaryKey]) ? $one[$primaryKey] : '';
         if ($primaryVal) {
-            $model = MyAddress::findOne($primaryVal);
+            $model = $this->_addressModel->findOne($primaryVal);
             if (!$model) {
-                Yii::$service->helper->errors->add('address '.$this->getPrimaryKey().' is not exist');
+                Yii::$service->helper->errors->add('address {primaryKey} is not exist', ['primaryKey' => $this->getPrimaryKey()]);
 
-                return;
+                return false;
             }
         } else {
-            $model = new MyAddress();
+            $model = new $this->_addressModelName();
             $model->created_at = time();
-            if (isset(Yii::$app->user)) {
-                $user = Yii::$app->user;
-                if (isset($user->identity)) {
-                    $identity = $user->identity;
-                    $person_id = $identity['id'];
-                    //$model->created_person = $person_id;
-                }
+        }
+        $model->attributes = $one;
+        // 规则验证
+        if ($model->validate()) {
+            $model->updated_at = time();
+            // 保存地址。
+            $model = Yii::$service->helper->ar->save($model, $one);
+            if (!$model) {
+                return false;
             }
-        }
-        $model->updated_at = time();
-        $saveStatus = Yii::$service->helper->ar->save($model, $one);
+        } else {
+            $errors = $model->errors;
+            Yii::$service->helper->errors->addByModelErrors($errors);
 
-        if (!$primaryVal) {
-            $primaryVal = Yii::$app->db->getLastInsertID();
+            return false;
         }
+        $primaryVal = $model[$primaryKey];
         if ($one['is_default'] == 1) {
             $customer_id = $one['customer_id'];
-            MyAddress::updateAll(
-                ['is_default'=>2],  // $attributes
-                'customer_id = '.$customer_id.' and  '.$primaryKey.' != ' .$primaryVal      // $condition
-                //[':customer_id' => $customer_id]
-            );
+            if ($customer_id && $primaryVal) {
+                $this->_addressModel->updateAll(
+                    ['is_default'=>2],  // $attributes
+                    'customer_id = :customer_id and  '.$primaryKey.' != :primaryVal ',      // $condition
+                    [
+                        'customer_id' => $customer_id,
+                        'primaryVal'  => $primaryVal,
+                    ]
+                );
+            }
         }
 
         return $primaryVal;
     }
 
     /**
-     * @property $ids | Int or Array
+     * @param $ids | Int or Array
      * @return bool
-     *              如果传入的是id数组，则删除多个
-     *              如果传入的是Int，则删除一个coupon
+     * 如果传入的是id数组，则删除多个address,如果传入的是Int，则删除一个address
+     * 删除address的同时，删除掉购物车中的address_id
+     * 删除address的同时，如果删除的是default address，那么重新找出来一个address作为default address并保存到表中。
      */
-    protected function actionRemove($ids, $customer_id = '')
+    protected function actionRemove($ids, $customer_id)
     {
         if (!$ids) {
             Yii::$service->helper->errors->add('remove id is empty');
@@ -218,7 +241,7 @@ class Address extends Service
         }
         if (is_array($ids) && !empty($ids)) {
             foreach ($ids as $id) {
-                $model = MyAddress::findOne($id);
+                $model = $this->_addressModel->findOne($id);
                 if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
                     if ($customer_id) {
                         if ($model['customer_id'] == $customer_id) {
@@ -227,19 +250,20 @@ class Address extends Service
                         } else {
                             Yii::$service->helper->errors->add('remove address is not current customer address');
                         }
-                    } else {
-                        $this->removeCartAddress($model['customer_id'], $id);
-                        $model->delete();
                     }
+                    //} else {
+                    //    $this->removeCartAddress($model['customer_id'], $id);
+                    //    $model->delete();
+                    //}
                 } else {
-                    Yii::$service->helper->errors->add("address Remove Errors:ID $id is not exist.");
+                    Yii::$service->helper->errors->add('Address Remove Errors:ID {id} is not exist', ['id' => $id]);
 
                     return false;
                 }
             }
         } else {
             $id = $ids;
-            $model = MyAddress::findOne($id);
+            $model = $this->_addressModel->findOne($id);
             if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
                 if ($customer_id) {
                     if ($model['customer_id'] == $customer_id) {
@@ -248,38 +272,41 @@ class Address extends Service
                     } else {
                         Yii::$service->helper->errors->add('remove address is not current customer address');
                     }
-                } else {
-                    $this->removeCartAddress($model['customer_id'], $id);
-                    $model->delete();
                 }
+                //} else {
+                //    $this->removeCartAddress($model['customer_id'], $id);
+                //    $model->delete();
+                //}
             } else {
-                Yii::$service->helper->errors->add("Address Remove Errors:ID:$id is not exist.");
+                Yii::$service->helper->errors->add('Address Remove Errors:ID:{id} is not exist', ['id'=> $id]);
 
                 return false;
             }
         }
         // 查看是否有默认地址？如果该用户存在记录，但是没有默认地址，
         // 则查找用户是否存在非默认地址，如果存在，则取一个设置为默认地址
-        if ($customer_id) {
-            $addressOne = MyAddress::find()->asArray()
-                        ->where(['customer_id' => $customer_id, 'is_default' => 1])
-                        ->one();
-            if (!$addressOne['address_id']) {
-                $assOne = MyAddress::find()
-                        ->where(['customer_id' => $customer_id])
-                        ->one();
-                if ($assOne['address_id']) {
-                    $assOne->is_default = 1;
-                    $assOne->updated_at = time();
-                    $assOne->save();
-                }
+        $addressOne = $this->_addressModel->find()->asArray()
+                    ->where(['customer_id' => $customer_id, 'is_default' => 1])
+                    ->one();
+        if (!$addressOne['address_id']) {
+            $assOne = $this->_addressModel->find()
+                    ->where(['customer_id' => $customer_id])
+                    ->one();
+            if ($assOne['address_id']) {
+                $assOne->is_default = 1;
+                $assOne->updated_at = time();
+                $assOne->save();
             }
         }
-
+        
         return true;
     }
 
-    // 删除购物车中的address部分。
+    /**
+     * @param $customer_id | Int ,
+     * @param $address_id | Int，address id
+     * 删除购物车中的address部分。
+     */
     protected function removeCartAddress($customer_id, $address_id)
     {
         $cart = Yii::$service->cart->quote->getCartByCustomerId($customer_id);
@@ -292,7 +319,7 @@ class Address extends Service
     }
 
     /*
-     * @property $customer_id | int 用户的id
+     * @param $customer_id | int 用户的id
      * @return Array Or ''
      * 得到customer的默认地址。
      */
@@ -303,13 +330,13 @@ class Address extends Service
             $customer_id = $identity['id'];
         }
         if($customer_id ){
-            $addressOne = MyAddress::find()->asArray()
+            $addressOne = $this->_addressModel->find()->asArray()
                             ->where(['customer_id' => $customer_id,'is_default' => 1])
                             ->one();
             if($addressOne['address_id']){
                 return $addressOne;
             }else{
-                $assOne = MyAddress::find()->asArray()
+                $assOne = $this->_addressModel->find()->asArray()
                             ->where(['customer_id' => $customer_id])
                             ->one();
                 if($assOne['address_id']){

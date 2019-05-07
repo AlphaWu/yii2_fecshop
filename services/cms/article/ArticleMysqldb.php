@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,26 +10,38 @@
 
 namespace fecshop\services\cms\article;
 
-use fecshop\models\mysqldb\cms\Article;
+//use fecshop\models\mysqldb\cms\Article;
 use Yii;
 use yii\base\InvalidValueException;
+use fecshop\services\Service;
 
 /**
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
-class ArticleMysqldb implements ArticleInterface
+class ArticleMysqldb extends Service implements ArticleInterface
 {
     public $numPerPage = 20;
+
+    protected $_articleModelName = '\fecshop\models\mysqldb\cms\Article';
+
+    protected $_articleModel;
+
+    public function init()
+    {
+        parent::init();
+        list($this->_articleModelName, $this->_articleModel) = Yii::mapGet($this->_articleModelName);
+    }
+
     /**
      *  language attribute.
      */
     protected $_lang_attr = [
-            'title',
-            'meta_description',
-            'content',
-            'meta_keywords',
-        ];
+        'title',
+        'meta_description',
+        'content',
+        'meta_keywords',
+    ];
 
     public function getPrimaryKey()
     {
@@ -38,7 +51,7 @@ class ArticleMysqldb implements ArticleInterface
     public function getByPrimaryKey($primaryKey)
     {
         if ($primaryKey) {
-            $one = Article::findOne($primaryKey);
+            $one = $this->_articleModel->findOne($primaryKey);
             foreach ($this->_lang_attr as $attrName) {
                 if (isset($one[$attrName])) {
                     $one[$attrName] = unserialize($one[$attrName]);
@@ -47,27 +60,46 @@ class ArticleMysqldb implements ArticleInterface
 
             return $one;
         } else {
-            return new Article();
+            return new $this->_articleModelName();
         }
+    }
+
+    /**
+     * @param $urlKey | String ,  对应表的url_key字段
+     * 根据url_key 查询得到article model
+     */
+    public function getByUrlKey($urlKey)
+    {
+        if ($urlKey) {
+            $model = $this->_articleModel->findOne(['url_key' => '/'.$urlKey]);
+            if (isset($model['url_key'])) {
+                $model['content'] = unserialize($model['content']);
+                $model['title'] = unserialize($model['title']);
+                $model['meta_keywords'] = unserialize($model['meta_keywords']);
+                $model['meta_description'] = unserialize($model['meta_description']);
+                return $model;
+            }
+        }
+        return false;
     }
 
     /*
      * example filter:
      * [
-     * 		'numPerPage' 	=> 20,
-     * 		'pageNum'		=> 1,
-     * 		'orderBy'	=> ['_id' => SORT_DESC, 'sku' => SORT_ASC ],
-            'where'			=> [
-                ['>','price',1],
-                ['<=','price',10]
-     * 			['sku' => 'uk10001'],
-     * 		],
-     * 	'asArray' => true,
+     *     'numPerPage'     => 20,
+     *     'pageNum'        => 1,
+     *     'orderBy'        => ['_id' => SORT_DESC, 'sku' => SORT_ASC ],
+     *     'where'          => [
+     *         ['>','price',1],
+     *         ['<=','price',10]
+     *         ['sku' => 'uk10001'],
+     *     ],
+     *     'asArray' => true,
      * ]
      */
     public function coll($filter = '')
     {
-        $query = Article::find();
+        $query = $this->_articleModel->find();
         $query = Yii::$service->helper->ar->getCollByFilter($query, $filter);
         $coll = $query->all();
         if (!empty($coll)) {
@@ -81,12 +113,12 @@ class ArticleMysqldb implements ArticleInterface
         //var_dump($one);
         return [
             'coll' => $coll,
-            'count'=> $query->count(),
+            'count'=> $query->limit(null)->offset(null)->count(),
         ];
     }
 
     /**
-     * @property $one|array
+     * @param $one|array
      * save $data to cms model,then,add url rewrite info to system service urlrewrite.
      */
     public function save($one, $originUrlKey)
@@ -94,14 +126,14 @@ class ArticleMysqldb implements ArticleInterface
         $currentDateTime = \fec\helpers\CDate::getCurrentDateTime();
         $primaryVal = isset($one[$this->getPrimaryKey()]) ? $one[$this->getPrimaryKey()] : '';
         if ($primaryVal) {
-            $model = Article::findOne($primaryVal);
+            $model = $this->_articleModel->findOne($primaryVal);
             if (!$model) {
-                Yii::$service->helper->errors->add('article '.$this->getPrimaryKey().' is not exist');
+                Yii::$service->helper->errors->add('article {primaryKey} is not exist' , ['primaryKey' => $this->getPrimaryKey()]);
 
                 return;
             }
         } else {
-            $model = new Article();
+            $model = new $this->_articleModelName();
             $model->created_at = time();
             $model->created_user_id = \fec\helpers\CUser::getCurrentUserId();
         }
@@ -111,20 +143,36 @@ class ArticleMysqldb implements ArticleInterface
                 $one[$attrName] = serialize($one[$attrName]);
             }
         }
-
-        $saveStatus = Yii::$service->helper->ar->save($model, $one);
-        if (!$primaryVal) {
-            $primaryVal = Yii::$app->db->getLastInsertID();
-        }
+        $primaryKey = $this->getPrimaryKey();
+        $model      = Yii::$service->helper->ar->save($model, $one);
+        $primaryVal = $model[$primaryKey];
 
         $originUrl = $originUrlKey.'?'.$this->getPrimaryKey() .'='. $primaryVal;
         $originUrlKey = isset($one['url_key']) ? $one['url_key'] : '';
         $defaultLangTitle = Yii::$service->fecshoplang->getDefaultLangAttrVal($one['title'], 'title');
         $urlKey = Yii::$service->url->saveRewriteUrlKeyByStr($defaultLangTitle, $originUrl, $originUrlKey);
         $model->url_key = $urlKey;
+        $this->initStatus($model);
         $model->save();
+        // 保存的数据格式返回
+        $model['content'] = unserialize($model['content']);
+        $model['title'] = unserialize($model['title']);
+        $model['meta_keywords'] = unserialize($model['meta_keywords']);
+        $model['meta_description'] = unserialize($model['meta_description']);
+        return $model->attributes;
+    }
 
-        return true;
+    protected function initStatus($model)
+    {
+        $statusArr = [$model::STATUS_ACTIVE, $model::STATUS_DELETED];
+        if ($model['status']) {
+            $model['status'] = (int) $model['status'];
+            if (!in_array($model['status'], $statusArr)) {
+                $model['status'] = $model::STATUS_ACTIVE;
+            }
+        } else {
+            $model['status'] = $model::STATUS_ACTIVE;
+        }
     }
 
     public function remove($ids)
@@ -138,22 +186,21 @@ class ArticleMysqldb implements ArticleInterface
             $innerTransaction = Yii::$app->db->beginTransaction();
             try {
                 foreach ($ids as $id) {
-                    $model = Article::findOne($id);
+                    $model = $this->_articleModel->findOne($id);
                     if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
                         $url_key = $model['url_key'];
                         Yii::$service->url->removeRewriteUrlKey($url_key);
                         $model->delete();
                     } else {
-
-                        //throw new InvalidValueException("ID:$id is not exist.");
-                        Yii::$service->helper->errors->add("Article Remove Errors:ID $id is not exist.");
+                        // throw new InvalidValueException("ID:$id is not exist.");
+                        Yii::$service->helper->errors->add('Article Remove Errors:ID {id} is not exist.', ['id' => $id]);
                         $innerTransaction->rollBack();
 
                         return false;
                     }
                 }
                 $innerTransaction->commit();
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 Yii::$service->helper->errors->add('Article Remove Errors: transaction rollback');
                 $innerTransaction->rollBack();
 
@@ -161,7 +208,7 @@ class ArticleMysqldb implements ArticleInterface
             }
         } else {
             $id = $ids;
-            $model = Article::findOne($id);
+            $model = $this->_articleModel->findOne($id);
             if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
                 $innerTransaction = Yii::$app->db->beginTransaction();
                 try {
@@ -169,12 +216,12 @@ class ArticleMysqldb implements ArticleInterface
                     Yii::$service->url->removeRewriteUrlKey($url_key);
                     $model->delete();
                     $innerTransaction->commit();
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     Yii::$service->helper->errors->add('Article Remove Errors: transaction rollback');
                     $innerTransaction->rollBack();
                 }
             } else {
-                Yii::$service->helper->errors->add("Article Remove Errors:ID:$id is not exist.");
+                Yii::$service->helper->errors->add('Article Remove Errors:ID {id} is not exist.', ['id' => $id]);
 
                 return false;
             }

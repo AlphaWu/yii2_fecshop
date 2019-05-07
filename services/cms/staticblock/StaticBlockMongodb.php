@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,16 +10,28 @@
 
 namespace fecshop\services\cms\staticblock;
 
-use fecshop\models\mongodb\cms\StaticBlock;
+//use fecshop\models\mongodb\cms\StaticBlock;
 use Yii;
+use fecshop\services\Service;
 
 /**
+ * staticBlock部分，mongodb的实现部分。
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
-class StaticBlockMongodb implements StaticBlockInterface
+class StaticBlockMongodb extends Service implements StaticBlockInterface
 {
     public $numPerPage = 20;
+
+    protected $_staticBlockModelName = '\fecshop\models\mongodb\cms\StaticBlock';
+
+    protected $_staticBlockModel;
+    
+    public function init()
+    {
+        parent::init();
+        list($this->_staticBlockModelName, $this->_staticBlockModel) = Yii::mapGet($this->_staticBlockModelName);
+    }
 
     public function getPrimaryKey()
     {
@@ -28,15 +41,15 @@ class StaticBlockMongodb implements StaticBlockInterface
     public function getByPrimaryKey($primaryKey)
     {
         if ($primaryKey) {
-            return StaticBlock::findOne($primaryKey);
+            return $this->_staticBlockModel->findOne($primaryKey);
         } else {
-            return new StaticBlock();
+            return new $this->_staticBlockModelName();
         }
     }
 
     public function getByIdentify($identify)
     {
-        return StaticBlock::find()->asArray()->where([
+        return $this->_staticBlockModel->find()->asArray()->where([
             'identify' => $identify,
         ])->one();
     }
@@ -57,17 +70,17 @@ class StaticBlockMongodb implements StaticBlockInterface
      */
     public function coll($filter = '')
     {
-        $query = StaticBlock::find();
+        $query = $this->_staticBlockModel->find();
         $query = Yii::$service->helper->ar->getCollByFilter($query, $filter);
 
         return [
             'coll' => $query->all(),
-            'count'=> $query->count(),
+            'count'=> $query->limit(null)->offset(null)->count(),
         ];
     }
 
     /**
-     * @property $one|array
+     * @param $one|array
      * save $data to cms model,then,add url rewrite info to system service urlrewrite.
      */
     public function save($one)
@@ -75,19 +88,19 @@ class StaticBlockMongodb implements StaticBlockInterface
         $currentDateTime = \fec\helpers\CDate::getCurrentDateTime();
         $primaryVal = isset($one[$this->getPrimaryKey()]) ? $one[$this->getPrimaryKey()] : '';
         if (!($this->validateIdentify($one))) {
-            Yii::$service->helper->errors->add('StaticBlock: identify存在，您必须定义一个唯一的identify ');
+            Yii::$service->helper->errors->add('Static block: identify exit, You must define a unique identify');
 
             return;
         }
         if ($primaryVal) {
-            $model = StaticBlock::findOne($primaryVal);
+            $model = $this->_staticBlockModel->findOne($primaryVal);
             if (!$model) {
-                Yii::$service->helper->errors->add('StaticBlock '.$this->getPrimaryKey().' is not exist');
+                Yii::$service->helper->errors->add('Static block {primaryKey} is not exist', ['primaryKey' => $this->getPrimaryKey()]);
 
                 return;
             }
         } else {
-            $model = new StaticBlock();
+            $model = new $this->_staticBlockModelName();
             $model->created_at = time();
             $model->created_user_id = \fec\helpers\CUser::getCurrentUserId();
             $primaryVal = new \MongoDB\BSON\ObjectId();
@@ -103,11 +116,11 @@ class StaticBlockMongodb implements StaticBlockInterface
 
     protected function validateIdentify($one)
     {
-        $identify = $one['identify'];
-        $id = $this->getPrimaryKey();
+        $identify   = $one['identify'];
+        $id         = $this->getPrimaryKey();
         $primaryVal = isset($one[$id]) ? $one[$id] : '';
-        $where = ['identify' => $identify];
-        $query = StaticBlock::find()->asArray();
+        $where      = ['identify' => $identify];
+        $query      = $this->_staticBlockModel->find()->asArray();
         $query->where(['identify' => $identify]);
         if ($primaryVal) {
             $query->andWhere([$id => ['$ne'=> new \MongoDB\BSON\ObjectId($primaryVal)]]);
@@ -133,12 +146,12 @@ class StaticBlockMongodb implements StaticBlockInterface
         }
         if (is_array($ids) && !empty($ids)) {
             foreach ($ids as $id) {
-                $model = StaticBlock::findOne($id);
+                $model = $this->_staticBlockModel->findOne($id);
                 $model->delete();
             }
         } else {
             $id = $ids;
-            $model = StaticBlock::findOne($id);
+            $model = $this->_staticBlockModel->findOne($id);
             $model->delete();
         }
 

@@ -25,18 +25,26 @@ class Register
         $email = isset($param['email']) ? $param['email'] : '';
         $registerParam = \Yii::$app->getModule('customer')->params['register'];
         $registerPageCaptcha = isset($registerParam['registerPageCaptcha']) ? $registerParam['registerPageCaptcha'] : false;
-
+        $this->breadcrumbs(Yii::$service->page->translate->__('Register'));
         return [
             'firstname'        => $firstname,
-            'lastname'        => $lastname,
+            'lastname'         => $lastname,
             'email'            => $email,
-            'is_subscribed'    => $is_subscribed,
             'minNameLength' => Yii::$service->customer->getRegisterNameMinLength(),
             'maxNameLength' => Yii::$service->customer->getRegisterNameMaxLength(),
             'minPassLength' => Yii::$service->customer->getRegisterPassMinLength(),
             'maxPassLength' => Yii::$service->customer->getRegisterPassMaxLength(),
             'registerPageCaptcha' => $registerPageCaptcha,
         ];
+    }
+    // 面包屑导航
+    protected function breadcrumbs($name)
+    {
+        if (Yii::$app->controller->module->params['register_breadcrumbs']) {
+            Yii::$service->page->breadcrumbs->addItems(['name' => $name]);
+        } else {
+            Yii::$service->page->breadcrumbs->active = false;
+        }
     }
 
     public function register($param)
@@ -55,6 +63,7 @@ class Register
             return;
         }
         Yii::$service->customer->register($param);
+        
         $errors = Yii::$service->page->message->addByHelperErrors();
         if (!$errors) {
             // 发送注册邮件

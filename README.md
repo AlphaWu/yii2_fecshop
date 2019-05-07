@@ -11,71 +11,124 @@
 [![Latest Stable Version](https://poser.pugx.org/fancyecommerce/fecshop/v/stable)](https://packagist.org/packages/fancyecommerce/fecshop) [![Total Downloads](https://poser.pugx.org/fancyecommerce/fecshop/downloads)](https://packagist.org/packages/fancyecommerce/fecshop) [![Latest Unstable Version](https://poser.pugx.org/fancyecommerce/fecshop/v/unstable)](https://packagist.org/packages/fancyecommerce/fecshop)
 
 
-开源协议：遵循BSD-3-Clause协议，和Yii2框架一样的开源协议。
+
 
 项目状态：
 
-> 正式版本已经出来，后台（appadmin）和pc端（appfront）,wap端（apphtml5）已经完成，完成了一些基本的api。
+
+> Fecshop开源项目已经**全部开发完毕**，一共六大入口：pc端（appfront）,wap端（apphtml5），后台（appadmin）
+> ，vue端（appserver），第三方系统对接端（appapi），后台脚本端（console），都全部开发完毕，
+> 您可以使用Fecshop用于您的线上电商项目，
+> Fecshop是一个功能齐全的开源电商系统，偏框架，适合程序员深入学习使用，
+> 二开比较容易，欢迎大家使用Fecshop开发自己的电商项目。
 
 
 
 1、Fecshop介绍
 ------------
 
-[Fecshop](http://www.fecshop.com) 全称为Fancy ECommerce Shop，是基于php Yii2框架之上开发的一款优秀的开源电商系统，遵循BSD-3-Clause协议(和Yii2框架一样的开源协议)，
+
+[Fecshop](http://www.fecshop.com) 全称为Fancy ECommerce Shop，是基于php Yii2框架之上开发的一款优秀的开源电商系统，
 Fecshop支持多语言，多货币，架构上支持pc，手机web，手机app，和erp对接等入口，您可以免费快速的定制和部署属于您的电商系统。
 
 详细参看地址：[Fecshop介绍](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-description.html)
 
 [Fecshop](http://www.fecshop.com) 官网：http://www.fecshop.com ，您可以在这里提交bug，问题咨询等等。
 
-[Fecshop](http://www.fecshop.com) English Demo：http://fecshop.appfront.fancyecommerce.com/
+[Fecshop](http://www.fecshop.com) 【已完成】PC Web Demo ：[http://fecshop.appfront.fancyecommerce.com](http://fecshop.appfront.fancyecommerce.com/men?fec_campaign=xxx&fec_content=94&fec_design=96&fec_medium=Share&fec_source=Facebook&fid=7a77a6ba-2d90-4ad5-bf75-fdf920de41f7)
 
-[Fecshop](http://www.fecshop.com) 中文演示地址：http://fecshop.appfront.fancyecommerce.com/cn
+[Fecshop](http://www.fecshop.com) 【已完成】Mobile Web Demo（WAP）：[http://fecshop.apphtml5.fancyecommerce.com](http://fecshop.apphtml5.fancyecommerce.com?fec_campaign=xxxx&fec_content=94&fec_design=96&fec_medium=Adwords&fec_source=Facebook&fid=100000005)
+
+[Fecshop](http://www.fecshop.com) 【已完成】Mobile VUE Demo(Appserver,前后端彻底分离模式)：[http://demo.fancyecommerce.com/#/](http://demo.fancyecommerce.com/#/?fec_campaign=xxxx&fec_content=94&fec_design=96&fec_medium=Adwords&fec_source=Facebook&fid=100000005)
 
 [Fecshop](http://www.fecshop.com) 后台演示地址：加QQ群，在群公告里面有后台演示地址，账号密码等信息
 
-[Fecshop](http://www.fecshop.com) QQ群：186604851 ，入群验证：fecshop
 
-[Fecshop](http://www.fecshop.com) 作者QQ：2358269014
+作者, Terry Email：2358269014@qq.com
 
-FecShop Email：2358269014@qq.com
-
+Fecshop QQ群号（新）：782387676，入群验证：fecshop
+ 
 [Fecshop](http://www.fecshop.com) Github地址: https://github.com/fancyecommerce/yii2_fecshop
 
-2、Fecshop文档
+[Fecshop](http://www.fecshop.com) 码云地址: https://gitee.com/fecshopsoft/yii2_fecshop
+
+
+Fecshop开源协议：[Fecshop 授权协议](http://www.fecshop.com/license)
+
+Fecshop线上项目案例：http://www.fecshop.com/topic/55
+
+Fecshop问题咨询，Bug提交等参看：[Fecshop论坛](http://www.fecshop.com/topic)
+
+Fecshop开源项目历程：[Fecshop时间线](http://www.fecshop.com/site/timeline)
+
+
+Fecshop Trace 网站流量广告分析系统
+----------------------
+
+> golang + mongodb + elasticSearch 做的一套用户行为分析系统， 管理系统界面使用了vue admin， 已经和fecshop无缝对接完成，Appfront, Apphtml5, Appserver三个入口都打通数据对接，尤其是appserver这类vue类型的数据对接，该系统也是开源项目，通过js打点和php发送数据的2种方式收集数据，存入mongodb，然后通过golang脚本进行一系列的统计，结果数据传递到elasticSearch进行查询，该系统对于初始的数据统计，以及广告分析已经完善，详细可以参看下面的demo，对于您自己想要的数据分析，可以自己二次开发。
+
+对于google analysis，百度统计等统计系统，收集的数据太少，譬如购物车数据，搜索数据，用户email，另外还有订单支付状态不准确的问题等等，另外，对于广告数据也不能满足要求，因此terry开发了一套网站流量广告系统来完善周围，更加详细的介绍，以及github源码地址参看文档
+
+网站流量分析系统文档： http://www.fecshop.com/doc/fec-go-guide/develop/cn-1.0/guide-trace-about.html
+
+> 2018年开始的项目，历经8个月开发完毕， 文档逐步完善， 有数据分析需求的童鞋可以使用
+
+Fecshop Trace Demo: http://trace.fecshop.com
+
+测试账户： test test123 （清不要修改密码，该账户有一定的权限限制）
+
+
+2、Fecshop文档，视频，扩展库
 ------------
 
-**二开以及安装文档：** [Fecshop 安装开发文档](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-README.html)【初版文档撰写完成】
+**二开以及安装文档：** [Fecshop 安装开发文档](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-README.html)【撰写完成】
 
-**使用帮助说明文档：** [Fecshop 使用帮助文档](http://www.fecshop.com/doc/fecshop-guide/instructions/cn-1.0/guide-README.html)【初版文档撰写完成】
+**使用帮助说明文档：** [Fecshop 使用帮助文档](http://www.fecshop.com/doc/fecshop-guide/instructions/cn-1.0/guide-README.html)【撰写完成】
+
+**安装开发帮助视频：** [Fecshop 安装开发视频](http://www.fecshop.com/doc/fecshop-guide/instructions/cn-1.0/guide-fecshop_video_install.html)【撰写完成】
+
+**前后端分离模式Api:** [Appserver VUE Api文档](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-server.html)【撰写完成】
+
+**Fecshop 扩展:** [Fecshop 官方扩展列表](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-pkg-list.html)
 
 
 3、安装Fecshop
 ------------
 
-> 请务必按照说明安装，vagrant安装为新手通过box加载过来，不需要配置环境，
-> 懂Yii2，还是自己来配置环境安装吧，也就是通过 3.2、全手动安装
-
-3.1、vagrant安装：
-
-通过vagrant加载box的方式直接安装，环境和fecshop的配置都已经弄好，详细可以参看文档地址：[Fecshop vagrant安装](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-vagrantinstall.html)
+> 请务必按照说明安装，Fecshop是基于composer在线安装，直接git clone下载下来是不行的，请按照下面的说明操作
 
 
-3.2、全手动安装：
+再强调一遍：**Fecshop是基于composer在线安装，直接git clone下载下来是不行的**，请按照安装文档操作
 
-从基础linux一步一步的配置的方式，详细参看文档： [Fecshop 全手动安装](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-hand-install.html)
 
-推荐使用第一种方式快速部署。
+3.1、【标准方式】标准安装方式：从基础linux一步一步的配置的方式，详细参看文档： [Fecshop 安装](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-hand-install.html)
 
-4、fecshop 配置：
+3.2、【强烈推荐】docker compose快速部署 
+：由于上面的安装操作需要安装的东西比较多，过程比较繁杂，
+建议使用docker compose，参看：
+[docker compose快速部署Fecshop](https://github.com/fecshop/yii2_fecshop_docker)
+
+3.3、【不推荐】vagrant box的方式：2017.6月做的box，以后不再维护vagrant box，
+推荐使用docker compose安装，如果您想使用vagrant box可以参看：
+[Fecshop vagrant安装](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-vagrantinstall.html)
+
+4、Fecshop 配置：
 ----------------
 
-配置详细参看：[fecshop 配置](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-config.html)
+配置详细参看：[Fecshop 配置](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-config.html)
 
-如果您使用vagrant box的安装方式，上面的这些步骤，在box都配置好了。
+如果您使用docker compose或者 vagrant box的安装方式，不需要执行这个操作。
 
-5、架构特色
+5、联系Terry：
+----------------
+
+扫一扫添加Terry的微信：
+
+![weixin](http://www.fecshop.com/terry_fecshop_weixin.png)
+
+
+
+6、架构特色
 -----------
 
 架构特色：参看详细介绍：[Fecshop 架构特色](http://www.fecshop.com/doc/fecshop-guide/develop/cn-1.0/guide-fecshop-about-framework.html)
@@ -94,7 +147,7 @@ Controller层只负责调度， Model只负责数据库映射，中间的处理�
 
 2. 加入独立功能块，有点类似Yii2的Widget，目的是为了让一些侧栏公用块
 可以通过配置的方式
-添加，同时，还可以具有设置缓存的功能，譬如侧栏的产品浏览记录，
+添加，同时，还可以具有设置缓存的功能，譬如分类侧栏的产品推荐，
 newsletter等独立显示块可能在很多
 页面用到，通过独立功能块可以配置方便的载入。
 
@@ -144,5 +197,101 @@ appserver（手机app服务），appapi（erp，或者其他接口对接），
 
 鉴于以上特点，您可以下载安装[Fecshop](http://www.fecshop.com)，然后更改[Fecshop](http://www.fecshop.com)的模板和功能，扩展自己想要
 的功能，或者安装第三方开发好了的扩展或者模板，来快速的组建起来您的网站。
+
+7、捐赠
+-----------
+
+如果您认为这是一个不错的项目，对您有帮助，你可以通过下面的方式进行捐赠，
+这里感谢您对开源项目的支持。
+
+支付宝：
+
+![](http://www.fecshop.com/alipay.png)
+
+微信：
+
+![](http://www.fecshop.com/weixin.png)
+
+[捐赠历史](http://www.fecshop.com/donate)：（捐助，建议写一下留言）
+
+| 捐赠人        | 金额      |  时间            |  方式           | 账户                       | 捐助者留言      |
+| -------------| ---------| -----------    | -----------   | ----------------------| ----------------|
+| （*亮亮    | ￥100.00   | 2019-04-06  |   支付宝          | -                   |   支持榜样，标杆              |
+| （*亮）      | ￥50.00   | 2019-04-06  |   微信          | -                     |    坚持，加油！             |
+| （*树桓）    | ￥50.00   | 2019-03-30  |   支付宝          | -                   |                 |
+| pptrue      | ￥50.00   | 2019-03-19  |   微信          | -                     |    支持开源，感谢Terry             |
+| （*军）      | ￥188.00   | 2019-03-10  |   微信          | -                     |    为3年的坚持点赞            |
+| （*浩）      | ￥66.00   | 2019-02-13  |   微信          | -                     |    支持fecshop长久发展             |
+| （*嘉文）    | ￥0.10   | 2019-01-28  |   支付宝          | -                   |                 |
+| （*凡）    | ￥10.00   | 2019-01-07  |   支付宝          |  -                  |  加油               |
+| （y*g）      | ￥100.00   | 2018-12-26  |   微信          | -                     |    腾讯andehuang             |
+| （董*）      | ￥10.00   | 2018-12-24  |   微信          | -                     |                 |
+| （*间）      | ￥1.00   | 2018-12-14  |   微信          | -                     |                 |
+| pptrue      | ￥100.00   | 2018-12-13  |   微信          | -                     |  很喜欢这个项目，感谢terry和大家的无私奉献。作为编程小白一名，我还在努力学习中。感觉最近生活都充实了                |
+| （*树桓）    | ￥20.00   | 2018-11-30  |   支付宝          | -                     |                 |
+| （*艺业）    | ￥1.00   | 2018-11-30  |   支付宝          | -                     |                  |
+| （*泰）      | ￥100.00   | 2018-11-27  |   微信          | -                     |                  |
+| （*潇）      | ￥10.00   | 2018-11-26  |   微信          | -                     |   well done               |
+| （*少平）    | ￥1.00   | 2018-11-15  |   支付宝          | -                     | 学生，赚钱了再来捐，牛逼，看源码学习                 |
+| （*）         | ￥120.00   | 2018-10-28  |   微信          | -                     | 尽我一点绵薄之力给你帮助。                  |
+| （*）         | ￥20.00   | 2018-10-27  |   微信           | -                     | 支持一下                 |
+| （*）         | ￥8.88   | 2018-10-26  |   微信          | -                     | 国产良心之作！！                 |
+| （*华峰）    | ￥5.00   | 2018-10-19  |   支付宝          | -                     | 官网看着真不错，项目好用再来捐赠，开学了                 |
+| （*A）        | ￥6.66   | 2018-09-21  |   微信          | -                     |  感谢fecshop                |
+| （*大成）    | ￥1.00   | 2018-09-18  |   支付宝          | -                     |                  |
+| （*江林）   | ￥1.00   | 2018-09-11  |   支付宝          | -                     |                  |
+| （*）         | ￥500.00   | 2018-07-31  |   微信          | -                     |                  |
+| （*）         | ￥15.00   | 2018-07-23  |   微信          | -                     |                  |
+| （*）         | ￥15.00   | 2018-07-19  |   微信          | -                     |                  |
+| （*）         | ￥99.99  | 2018-07-12       |   微信        | -          | 作为国内的真正开源系统，真是良心之作，支持，祝愿长久发展！   |
+| *方招         | ￥30.00  | 2018-07-10       |   支付宝        | fan***gmail.com          | 感谢作者。非常不错的电商平台   |
+| 厦门码农网络科技有限公司         | ￥16.66  | 2018-07-04       |   支付宝        | cod***@126.com           | 厦门码农支持开源，为Fecshop！   |
+| *雷雷         | ￥800.00  | 2018-06-27       |   支付宝        | 134******22           | 支持作者，支持fecshop   |
+| （*）         | ￥1.00    | 2018-06-22       |   微信          | -                     |  |
+| *建欣         | ￥50.00   | 2018-06-15       |   支付宝        | 593***@qq.com         | 小小心意，支持fecshop的发展   |
+| *宁           | ￥5.00    | 2018-06-08       |   支付宝        | pay***@itoumao.com    | 感谢作者的开源精神，同为程序猿的我做不到   |
+| （*）         | ￥10.00   | 2018-06-06       |   微信          | -                     | 感谢作者，感谢开源  |
+| *庆飞         | ￥188.00  | 2018-06-05       |   支付宝        | lin***@aliyun.com     | 逛v2看到的，支持开源，为你点赞！   |
+| *桦           | ￥10.00   | 2018-05-24       |   支付宝        | -                     | 真心做得不错    |
+| （*）         | ￥1.00    | 2018-05-17       |   微信          | -                     | 搞的不错  |
+| （*）         | ￥13.14   | 2018-05-11       |   微信          | -                     | 北京智翔财务为你加油  |
+| （*）         | ￥10.00   | 2018-05-04       |   微信          | -                     | 希望fecshop越做越好  |
+| （*）         | ￥16.66   | 2018-04-20       |   微信          | -                     | 为你们打call  |
+| （*）         | ￥6.60    | 2018-04-16       |   微信          | -                     | 不会用一yii，为开源  |
+| （*）         | ￥166.00  | 2018-04-03       |   微信          | -                     | 为开源打call！  |
+| *仲春         | ￥66.66   | 2018-03-19       |   支付宝        | -                     | 加油加油，准备学习学习    |
+| （*）         | ￥10.00   | 2018-03-19       |   微信          | -                     | -  |
+| （*）         | ￥8.88    | 2018-03-18       |   微信          | -                     | 为作者坚持和耐心点赞  |
+| Simon         | ￥20.00   | 2018-03-16       |   支付宝        | 186***40              | 希望继续坚持开源事业    |
+| （*）         | ￥8.88    | 2018-03-16       |   微信          | -                     | -  |
+| （*）         | ￥100.00  | 2018-03-15       |   微信          | -                     | 干得漂亮  |
+| （*）         | ￥3.33    | 2018-03-15       |   微信          | -                     | 感谢为开源做出的贡献  |
+| xhq           | ￥2.00    | 2018-03-14       |   支付宝        | 143***@qq.com         | 好项目就是要让更多人知道    |
+| （*）         | ￥2.00    | 2018-03-13       |   微信          | -                     | -  |
+| 饭饭          | ￥120.00  | 2018-03-13       |   支付宝        | 420***@qq.com         | 为2年半的坚持加油    |
+| kingsee       | ￥6.66    | 2018-03-13       |   支付宝        | kin***@gmail.com      | -    |
+| （*）         | ￥10.00   | 2018-03-13       |   微信          | -                     | 感谢为开源做出的贡献  |
+| yangfch3      | ￥66.66   | 2018-03-13       |   支付宝        | 875***@qq.com| 感谢为开源默默付出的工程师们    |
+| （*）         | ￥66.66   | 2018-03-08       |   微信          | -                     | 已经在线上项目使用了，多谢Terry开发的这么好的开源系统。|
+| （*）         | ￥8.88    | 2018-03-06       |   微信          | -                     | 好项目，在学习。支持|
+| 华生          | ￥8.88    | 2018-02-22       |   支付宝        | 294***@qq.com         | 不错的开源项目，支持一下|
+| （*）         | ￥6.66    | 2018-02-18       |   微信          | -                     | 诚意的开源祝项目66顺 |
+| 剑清          | ￥99.99   | 2018-01-03       |   支付宝        | 262***@qq.com         | 很好的项目，祝越做越好，长久发展|
+| （*）         | ￥2.00    | 2017-12-28       |   微信          | -                     | -     |
+| （*）         | ￥6.60    | 2017-12-21       |   微信          | -                     | -     |
+| 水哥          | ￥99.99   | 2017-12-20       |   支付宝        | dd_***@sohu.com       | 祝fecshop发展永久|
+| （*）         | ￥9.90    | 2017-12-11       |   微信          | -                     | 希望长久！|
+| （*）         | ￥100.00  | 2017-10-21       |   微信          | -                     | 希望你坚持下去成为更多人的榜样|
+| （*）         | ￥100.00  | 2017-09-27       |   微信          | -                     | -     |
+| （*）         | ￥2.00    | 2017-09-18       |   微信          | -                     | 赞一个|
+| （*）         | ￥1.00    | 2017-09-15       |   微信          | -                     | -     |
+
+
+
+
+
+
+
+
 
 

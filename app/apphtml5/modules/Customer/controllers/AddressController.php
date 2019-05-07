@@ -18,19 +18,18 @@ use Yii;
  */
 class AddressController extends AppfrontController
 {
-    //protected $_registerSuccessRedirectUrlKey = 'customer/account';
-    public $enableCsrfValidation = false;
+    public $enableCsrfValidation = true;
 
     public function init()
     {
-        if (Yii::$app->user->isGuest) {
-            return Yii::$service->url->redirectByUrlKey('customer/account/login');
-        }
         parent::init();
     }
 
     public function actionIndex()
     {
+        if (Yii::$app->user->isGuest) {
+            return Yii::$service->url->redirectByUrlKey('customer/account/login');
+        }
         $data = $this->getBlock()->getLastData();
 
         return $this->render($this->action->id, $data);
@@ -38,6 +37,9 @@ class AddressController extends AppfrontController
 
     public function actionEdit()
     {
+        if (Yii::$app->user->isGuest) {
+            return Yii::$service->url->redirectByUrlKey('customer/account/login');
+        }
         $data = $this->getBlock()->getLastData();
 
         return $this->render($this->action->id, $data);
@@ -45,6 +47,9 @@ class AddressController extends AppfrontController
 
     public function actionChangecountry()
     {
+        if (Yii::$app->user->isGuest) {
+            return Yii::$service->url->redirectByUrlKey('customer/account/login');
+        }
         $this->getBlock('edit')->getAjaxState();
     }
 }

@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -13,6 +14,7 @@ use fecshop\services\Service;
 use Yii;
 
 /**
+ * 分类图片的一些处理。
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
@@ -22,10 +24,12 @@ class Image extends Service
      * absolute image save floder.
      */
     public $imageFloder = 'media/catalog/category';
+
     /**
      * upload image max size.
      */
     public $maxUploadMSize;
+
     /**
      * allow image type.
      */
@@ -62,15 +66,15 @@ class Image extends Service
     }
 
     /**
-     * 通过产品图片的相对路径得到产品图片的绝对路径.
+     * 通过分类图片的相对路径得到分类图片的绝对路径.
      */
-    protected function actionGetDir()
+    protected function actionGetDir($str)
     {
         return Yii::$service->image->GetImgDir($this->imageFloder.$str, 'common');
     }
 
     /**
-     * @property $param_img_file | Array .
+     * @param $param_img_file | Array .
      * upload image from web page , you can get image from $_FILE['XXX'] ,
      * $param_img_file is get from $_FILE['XXX'].
      * return , if success ,return image saved relative file path , like '/b/i/big.jpg'

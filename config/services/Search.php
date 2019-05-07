@@ -16,6 +16,7 @@ return [
         'childService' => [
             'mongoSearch' => [
                 'class'        => 'fecshop\services\search\MongoSearch',
+                'enableService'        => true,
                 'searchIndexConfig'  => [
                     'name' => 10,
                     'description' => 5,
@@ -34,6 +35,7 @@ return [
             ],
             'xunSearch'  => [
                 'class'        => 'fecshop\services\search\XunSearch',
+                'enableService'        => true,
                 /*
 
                 'fuzzy' => true,  # 是否开启模糊查询

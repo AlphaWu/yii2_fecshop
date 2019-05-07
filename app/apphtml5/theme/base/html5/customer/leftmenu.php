@@ -1,7 +1,16 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="list-block" style="margin-top:80px;">
     <ul>
-		<?php  if(!empty($leftMenuArr) && is_array($leftMenuArr)){  ?>
-			<?php foreach($leftMenuArr as $one){ ?>
+		<?php  if(!empty($leftMenuArr) && is_array($leftMenuArr)):  ?>
+			<?php foreach($leftMenuArr as $one): ?>
 			
 			<li class="item-content item-link">
 				<div class="item-media"><i class="icon icon-f7"></i></div>
@@ -11,11 +20,13 @@
 					</div>
 				</div>
 			</li>
-			<?php } ?>
-		<?php } ?>	
+			<?php endforeach; ?>
+		<?php endif; ?>	
     </ul>
 </div>
 
 <div class="account_footer">
-	<a   external  href="<?= Yii::$service->url->getUrl("customer/account/logout");?> " class="button button-fill button-bbb">Logout</a>
+	<a   external  href="<?= Yii::$service->url->getUrl("customer/account/logout");?> " class="button button-fill button-bbb">
+        <?= Yii::$service->page->translate->__('Logout'); ?>
+    </a>
 </div>

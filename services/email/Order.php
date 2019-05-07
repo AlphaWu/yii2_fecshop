@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -10,12 +11,13 @@
 namespace fecshop\services\email;
 
 use Yii;
+use fecshop\services\Service;
 
 /**
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
-class Order
+class Order extends Service
 {
     /**
      * 邮件模板部分配置.
@@ -23,7 +25,10 @@ class Order
     public $emailTheme;
 
     /**
-     * @property $toEmail | String   send to email address.
+     * @param $emailInfo | Array  ，数组格式格式如下：
+     * [ 'emcustomer_emailail' => 'xx@xx.com' , [...] ] 其中customer_email是必须有的数组key，对于其他的，
+     * 可以根据功能添加，添加后，可以在邮件模板的$params中调用，譬如调用customer_email为 $params['customer_email']
+     * @return boolean , 如果发送成功，则返回true。
      * 新订单邮件
      */
     public function sendCreateEmail($orderInfo)
@@ -53,7 +58,6 @@ class Order
                     'htmlBody' => $htmlBody,
                     'senderName'=> Yii::$service->store->currentStore,
                 ];
-                //var_dump($sendInfo);exit;
                 Yii::$service->email->send($sendInfo, $mailerConfigParam);
 
                 return true;

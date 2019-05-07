@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -10,19 +11,23 @@
 namespace fecshop\services\product\viewLog;
 
 use fec\helpers\CDate;
-use fec\helpers\CSession;
 use fec\helpers\CUser;
 use fecshop\services\Service;
+use Yii;
 
 /**
+ * **注意**：该方法不能在接口类型里面使用
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class Session extends Service
 {
     public $type;
+
     public $_defaultType = 'session';
+
     public $_sessionKey = 'services_product_viewlog_history';
+
     public $_maxProductCount = 10;
 
     /**
@@ -30,7 +35,7 @@ class Session extends Service
      */
     public function getHistory()
     {
-        $history = CSession::get($this->_sessionKey);
+        $history = Yii::$service->session->get($this->_sessionKey);
 
         return $history ? $history : '';
     }
@@ -53,7 +58,7 @@ class Session extends Service
             $logArr['user_id'] = CUser::getCurrentUserId();
         }
 
-        if (!($session_history = CSession::get($this->_sessionKey))) {
+        if (!($session_history = Yii::$service->session->get($this->_sessionKey))) {
             $session_history = [];
         } elseif (($count = count($session_history)) >= $this->_maxProductCount) {
             $unsetMaxKey = $count - $this->_maxProductCount;
@@ -62,6 +67,6 @@ class Session extends Service
             }
         }
         $session_history[] = $logArr;
-        CSession::set($this->_sessionKey, $session_history);
+        Yii::$service->session->set($this->_sessionKey, $session_history);
     }
 }

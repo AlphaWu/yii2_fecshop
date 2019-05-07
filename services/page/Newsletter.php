@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,7 +10,7 @@
 
 namespace fecshop\services\page;
 
-use fecshop\models\mongodb\customer\Newsletter as MongoNewsletter;
+//use fecshop\models\mongodb\customer\Newsletter as MongoNewsletter;
 use fecshop\services\Service;
 
 /**
@@ -19,17 +20,28 @@ use fecshop\services\Service;
  */
 class Newsletter extends Service
 {
+    protected $_newsletterModelName = '\fecshop\models\mongodb\customer\Newsletter';
+
+    protected $_newsletterModel;
+    
+    public function init()
+    {
+        parent::init();
+        list($this->_newsletterModelName, $this->_newsletterModel) = \Yii::mapGet($this->_newsletterModelName);
+    }
+
     /**
+     * @param $email | String
      * newsletter subscription.
      */
     protected function actionSubscription($email)
     {
-        $mongoNewsletter = new MongoNewsletter();
+        $mongoNewsletter = new $this->_newsletterModelName();
         $mongoNewsletter->attributes = [
             'email' => $email,
         ];
         if ($mongoNewsletter->validate()) {
-            $one = MongoNewsletter::find()->where(['email' => $email])->one();
+            $one = $this->_newsletterModel->find()->where(['email' => $email])->one();
             if ($one['id']) {
                 return [
                     'code' => 300,
@@ -39,7 +51,7 @@ class Newsletter extends Service
                 $mongoNewsletter->save();
 
                 return [
-                'code' => 200,
+                    'code' => 200,
                     'description' => 'subscription email success',
                 ];
             }
@@ -52,7 +64,7 @@ class Newsletter extends Service
     }
 
     /**
-     * @property $filter|array
+     * @param $filter|array
      * get subscription email collection
      */
     protected function actionGetSubscriptionList($filter)

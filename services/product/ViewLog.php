@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -13,6 +14,7 @@ use fecshop\services\Service;
 use Yii;
 
 /**
+ * Product ViewLog Services
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */

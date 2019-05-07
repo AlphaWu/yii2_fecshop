@@ -1,4 +1,14 @@
 <?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+use fec\helpers\CRequest;
+?>
+<?php
 use fecshop\app\apphtml5\helper\Format;
 ?>
 <div class="account-ds">
@@ -17,9 +27,9 @@ use fecshop\app\apphtml5\helper\Format;
 			<div style="margin:4px 0 0">
 				<div style="width:100%;min-height:500px;">
 					<div style="width:100%;">
-						<?php if(is_array($coll) && !empty($coll)){  ?>
+						<?php if(is_array($coll) && !empty($coll)):  ?>
 						<table class="product-Reviews"> 
-							<?php  foreach($coll as $one){  ?>
+							<?php  foreach($coll as $one):  ?>
 							<?php  $main_img = $one['image']['main']['image'];  ?>
 							
 							<tr>
@@ -57,24 +67,23 @@ use fecshop\app\apphtml5\helper\Format;
 								</td>
 								<td>
 									<div class="favorite-Operation addressbook " style="display:inline-block;float:right; margin-top: 0px;">
-										<a external href="<?= Yii::$service->url->getUrl('customer/productfavorite',['type'=>'remove','favorite_id' => $one['favorite_id']]); ?>">
+										<a href='javascript:doPost("<?= Yii::$service->url->getUrl('customer/productfavorite') ?>", {"type":"remove", "favorite_id":"<?= $one['favorite_id'] ?>", "<?= CRequest::getCsrfName() ?>": "<?= CRequest::getCsrfValue() ?>" })' >
 											<span class="icon icon-remove"></span>
 										</a>
 									</div>
 								</td>
 							</tr>
-									
-							
-							<?php  }  ?>
+								
+							<?php  endforeach;  ?>
 						</table>
-						<?php  }else{  ?>
+						<?php  else:  ?>
 							<?= Yii::$service->page->translate->__('You have no items in your favorite.');?>
-						<?php  } ?>
-						<?php if($pageToolBar){ ?>
+						<?php  endif; ?>
+						<?php if($pageToolBar): ?>
 						<div class="pageToolbar">
 							<label class="title">Page:</label><?= $pageToolBar ?>
 						</div>
-						<?php } ?>
+						<?php endif; ?>
 					</div>
 				</div>
 			</div>
@@ -93,7 +102,7 @@ use fecshop\app\apphtml5\helper\Format;
 	<div class="clear"></div>
 </div>
 <script>
- function ShowRemark(eval,id){
+    function ShowRemark(eval,id){
         $('#remarkBox_'+id).show("slow");
     }
     function hideRemark(id){

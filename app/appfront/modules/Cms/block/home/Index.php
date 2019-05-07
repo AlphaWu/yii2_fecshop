@@ -4,7 +4,7 @@
  * 都是数组
  */
 
-namespace fecshop\app\appfront\modules\cms\block\home;
+namespace fecshop\app\appfront\modules\Cms\block\home;
 
 use Yii;
 
@@ -42,7 +42,7 @@ class Index
                 'sku', 'spu', 'name', 'image',
                 'price', 'special_price',
                 'special_from', 'special_to',
-                'url_key', 'score',
+                'url_key', 'score', 'reviw_rate_star_average', 'review_count'
             ];
             $filter['where'] = ['in', 'sku', $skus];
             $products = Yii::$service->product->getProducts($filter);

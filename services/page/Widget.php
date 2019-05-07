@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -17,35 +18,39 @@ use yii\base\InvalidConfigException;
 use yii\base\InvalidValueException;
 
 /**
- * widget services.
+ * Page widget services.
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class Widget extends Service
 {
     public $defaultObMethod = 'getLastData';
+
     public $widgetConfig;
 
-    /*
-    @property configKey   String or Array
-
-    Array example:
-    [
-        # class 选填
-        'class' => 'fec\block\TestMenu',
-        # view 为 必填 ， view可以用两种方式
-        #  view 1 使用绝对地址的方式
-        'view'  => '@fec/views/testmenu/index.php',
-            OR
-        #  view 2 使用相对地址，通过当前模板进行查找
-        'view'  => 'cms/home/index.php',
-
-        # 下面为选填
-        'method'=> 'getLastData',
-        'terry1'=> 'My1',
-        'terry2'=> 'My2',
-    ]
-    */
+    /**
+     * @param configKey   String or Array
+     * 如果传递的是一个配置数组，内容格式如下：
+     * [
+     *    # class 选填
+     *    'class' => 'fec\block\TestMenu',
+     *    # view 为 必填 ， view可以用两种方式
+     *    #  view 1 使用绝对地址的方式
+     *    'view'  => '@fec/views/testmenu/index.php',
+     *    OR
+     *    #  view 2 使用相对地址，通过当前模板进行查找
+     *    'view'  => 'cms/home/index.php',
+     *
+     *    # 下面为选填
+     *    'method'=> 'getLastData',
+     *    'terry1'=> 'My1',
+     *   'terry2'=> 'My2',
+     * ]
+     * 如果传递的是字符串，那么会去配置（$widgetConfig）中查找
+     * 最后找到后，通过renderContent函数，得到html
+     * 该功能大致为通过一个动态数据提供者block，和内容显示部分view，view里面需要使用的动态变量
+     * 由block提供，最终生成一个html区块，返回。
+     */
     protected function actionRender($configKey, $parentThis = '')
     {
         $config = '';
@@ -63,6 +68,12 @@ class Widget extends Service
         return $this->renderContent($configKey, $config, $parentThis);
     }
 
+    /**
+     * @param $configKey | string ,使用配置中的widget，该参数对应相应的数组key
+     * @param $config,就是上面actionRender()方法中的参数，格式一样。
+     * @param $parentThis | array or '' , 调用层传递的参数数组，可以在view中调用。
+     *
+     */
     protected function actionRenderContentHtml($configKey, $config, $parentThis = '')
     {
         if (!isset($config['view']) || empty($config['view'])
@@ -95,6 +106,12 @@ class Widget extends Service
         return Yii::$app->view->renderFile($viewFile, $params);
     }
 
+    /**
+     * @param $configKey | string , 标记，以及报错排查时使用的key。
+     * @param $config,就是上面actionRender()方法中的参数，格式一样。
+     * @param $parentThis | array or '' , 调用层传递的参数数组，可以在view中调用。
+     *
+     */
     protected function actionRenderContent($configKey, $config, $parentThis = '')
     {
         if (isset($config['cache']['enable']) && $config['cache']['enable']) {
@@ -117,6 +134,8 @@ class Widget extends Service
                 }
             }
         }
+        // 查看 $config['class'] 是否在YiiRewriteMap重写中存在配置，如果存在，则替换
+        !isset($config['class']) || $config['class'] = Yii::mapGetClassName($config['class']);
         $content = $this->renderContentHtml($configKey, $config, $parentThis);
 
         return $content;
@@ -143,7 +162,7 @@ class Widget extends Service
             }
         }
 
-        /* not find view file */
+        // not find view file
         if ($throwError) {
             $notExistFile = [];
             foreach ($absoluteDir as $dir) {

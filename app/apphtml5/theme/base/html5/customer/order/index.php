@@ -1,3 +1,12 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="account-ds">
 	<div class="bar bar-nav account-top-m">
 		<a external class="button button-link button-nav pull-left" href="<?= Yii::$service->url->getUrl('customer/account/index'); ?>">
@@ -7,7 +16,6 @@
 	</div>
 </div>
 <?= Yii::$service->page->widget->render('flashmessage'); ?>
-
 
 <div class="order_list">
 <?= Yii::$service->page->widget->render('flashmessage'); ?>
@@ -21,12 +29,12 @@
 						<tr class="first last">
 							<th><?= Yii::$service->page->translate->__('Order #');?> </th>
 							<th><?= Yii::$service->page->translate->__('Date');?></th>
-							<th>operate</th>
+							<th><?= Yii::$service->page->translate->__('Operation');?></th>
 						</tr>
 					</thead>
 					<tbody>
-					<?php  if(is_array($order_list) && !empty($order_list)){  ?>
-						<?php foreach($order_list as $order){ 
+					<?php  if(is_array($order_list) && !empty($order_list)):  ?>
+						<?php foreach($order_list as $order): 
 							$currencyCode = $order['order_currency_code'];
 							$symbol = Yii::$service->page->currency->getSymbol($currencyCode);
 							
@@ -44,20 +52,21 @@
 								</td>
 							</tr>
 						
-						<?php } ?>
-					<?php } ?>
+						<?php endforeach; ?>
+					<?php endif; ?>
 						
 					</tbody>
 				</table>
-				<?php if($pageToolBar){ ?>
-					<div class="pageToolbar">
-						<label class="title"><?= Yii::$service->page->translate->__('Page:');?></label><?= $pageToolBar ?>
+				<?php if($pageToolBar): ?>
+					<div class="pageToolbar customer_order">
+						<label class=""><?= Yii::$service->page->translate->__('Page:');?></label>
+                        <?= $pageToolBar ?>
+                        <div class="clear"></div>
 					</div>
-				<?php } ?>
+				<?php endif; ?>
 			</div>
 		</div>
 	</div>
-	
 	
 	<div class="clear"></div>
 </div>

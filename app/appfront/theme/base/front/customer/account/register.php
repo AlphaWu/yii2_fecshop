@@ -1,12 +1,20 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="main container one-column">
-<?= Yii::$service->page->widget->render('flashmessage'); ?>
-
+    <?= Yii::$service->page->widget->render('breadcrumbs',$this); ?>
+    <?= Yii::$service->page->widget->render('flashmessage'); ?>
 	<div class="account-register">
 		<div class="page-title">
 			<h1><?= Yii::$service->page->translate->__('Create an Account'); ?></h1>
 		</div>
         <form action="<?= Yii::$service->url->getUrl('customer/account/register'); ?>" method="post" id="form-validate">
-			
 			<div class="fieldset">
 				<h2 class="legend"><?= Yii::$service->page->translate->__('Personal Information'); ?></h2>
 				<ul class="form-list">
@@ -57,12 +65,12 @@
 							</div>
 						</div>
 						
-						<?php if($registerPageCaptcha){  ?>
+						<?php if($registerPageCaptcha):  ?>
 						<div class="field">
                             <label for="captcha" class="required"><em>*</em><?= Yii::$service->page->translate->__('Captcha'); ?></label>
                             <div class="input-box register-captcha">
 								<input type="text" name="editForm[captcha]" value="" size=10 class="login-captcha-input"> 
-								<img class="login-captcha-img"  title="click refresh" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
+								<img class="login-captcha-img"  title="click refresh" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?<?php echo md5(time() . mt_rand(1,10000));?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
 								<i class="refresh-icon"></i>
                             </div>
 							<script>
@@ -75,19 +83,13 @@
 							<?php $this->endBlock(); ?>  
 							</script>  
 							<?php $this->registerJs($this->blocks['register_captcha_onclick_refulsh'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
-
                         </div>
-						<?php }  ?>
-					</li>
-					
-					
-						
-						
+						<?php endif;  ?>
+					</li>	
 				</ul>
 			</div>
 			<?= \fec\helpers\CRequest::getCsrfInputHtml();  ?>
 			<div class="buttons-set">
-				
 				<button type="button" id="js_registBtn" class="redBtn"><em><span><i></i><?= Yii::$service->page->translate->__('Submit'); ?></span></em></button>
 				<p class="back-link"><a href="<?= Yii::$service->url->getUrl('customer/account/login'); ?>" class="back-link"><small>« </small><?= Yii::$service->page->translate->__('Back'); ?></a></p>
 			</div>

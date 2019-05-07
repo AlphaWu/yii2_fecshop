@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,54 +10,43 @@
 
 namespace fecshop\services\customer;
 
-use Facebook\FacebookRedirectLoginHelper;
-use Facebook\FacebookSession;
 use fecshop\services\Service;
 use Yii;
 
 /**
- * Address  child services.
+ * Facebook  child services.
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class Facebook extends Service
 {
     public $facebook_app_id;
+
     public $facebook_app_secret;
 
-    public function initParam()
+    /**
+     * @param $url | String , 用于得到返回url的字符串，$customDomain == false时，是urlKey，$customDomain == true时，是完整的url
+     * @param $customDomain | boolean, 是否是自定义url
+     * @return  得到跳转到facebook登录的url
+     */
+    public function getLoginUrl($url, $customDomain = false)
     {
-        //$currentStore = Yii::$service->store->currentStore;
-        $store = Yii::$service->store->store;
-        //$stores
-        if (isset($store['thirdLogin']['facebook']['facebook_app_secret'])) {
-            $this->facebook_app_secret = $store['thirdLogin']['facebook']['facebook_app_secret'];
+        if (!$customDomain) {
+            $redirectUrl = Yii::$service->url->getUrl($url);
+        } else {
+            $redirectUrl = $url;
         }
-        if (isset($store['thirdLogin']['facebook']['facebook_app_id'])) {
-            $this->facebook_app_id = $store['thirdLogin']['facebook']['facebook_app_id'];
-        }
-    }
-
-    // 得到facebook登录的url。
-    public function getLoginUrl($urlKey)
-    {
-        $this->initParam();
-        session_start();
-        $thirdLogin = Yii::$service->store->thirdLogin;
-        $this->facebook_app_id = isset($thirdLogin['facebook']['facebook_app_id']) ? $thirdLogin['facebook']['facebook_app_id'] : '';
+        $thirdLogin  = Yii::$service->store->thirdLogin;
+        $this->facebook_app_id     = isset($thirdLogin['facebook']['facebook_app_id']) ? $thirdLogin['facebook']['facebook_app_id'] : '';
         $this->facebook_app_secret = isset($thirdLogin['facebook']['facebook_app_secret']) ? $thirdLogin['facebook']['facebook_app_secret'] : '';
-
-        if ($this->facebook_app_secret && $this->facebook_app_id) {
-            FacebookSession::setDefaultApplication($this->facebook_app_id, $this->facebook_app_secret);
-            $redirectUrl = Yii::$service->url->getUrl($urlKey);
-            //echo $redirectUrl;exit;
-            $facebook = new FacebookRedirectLoginHelper($redirectUrl, $this->facebook_app_id, $this->facebook_app_secret);
-
-            $facebook_login_url = $facebook->getLoginUrl([
-                'req_perms' => 'email,publish_stream',
-            ]);
-
-            return $facebook_login_url;
-        }
+        $fb = new \Facebook\Facebook([
+            'app_id' => $this->facebook_app_id,
+            'app_secret' => $this->facebook_app_secret,
+            'default_graph_version' => 'v2.10',
+        ]);
+        $helper = $fb->getRedirectLoginHelper();
+        $permissions = ['email']; // Optional permissions
+        $loginUrl = $helper->getLoginUrl($redirectUrl, $permissions);
+        return $loginUrl;
     }
 }

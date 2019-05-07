@@ -18,6 +18,8 @@ use Yii;
  */
 class ReviewproductController extends AppfrontController
 {
+    public $enableCsrfValidation = true;
+    
     public function init()
     {
         parent::init();
@@ -45,7 +47,7 @@ class ReviewproductController extends AppfrontController
                 $_id = Yii::$app->request->get('_id');
                 if ($spu && $_id) {
                     $url = Yii::$service->url->getUrl('catalog/reviewproduct/lists', ['spu' => $spu, '_id'=>$_id]);
-                    $this->redirect($url);
+                    return $this->redirect($url);
                 }
             }
         }

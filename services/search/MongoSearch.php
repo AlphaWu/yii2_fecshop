@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,33 +10,48 @@
 
 namespace fecshop\services\search;
 
-use fecshop\models\mongodb\Product;
-use fecshop\models\mongodb\Search;
+//use fecshop\models\mongodb\Product;
+//use fecshop\models\mongodb\Search;
 use fecshop\services\Service;
 use Yii;
 
 /**
- * Search.
+ * Search MongoSearch Service
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class MongoSearch extends Service implements SearchInterface
 {
     public $searchIndexConfig;
+
     public $searchLang;
 
+    public $enable;
+
+    protected $_productModelName = '\fecshop\models\mongodb\Product';
+
+    protected $_productModel;
+
+    protected $_searchModelName = '\fecshop\models\mongodb\Search';
+
+    protected $_searchModel;
+    
     public function init()
     {
+        parent::init();
+        list($this->_productModelName, $this->_productModel) = \Yii::mapGet($this->_productModelName);
+        list($this->_searchModelName, $this->_searchModel) = \Yii::mapGet($this->_searchModelName);
+        $sModel = $this->_searchModel;
         /**
          * 初始化search model 的属性，将需要过滤的属性添加到search model的类属性中。
-         *  $searchModel 		= new Search;
+         *  $searchModel 		= new $this->_searchModelName;
          *  $searchModel->attributes();
          *	上面的获取的属性，就会有下面添加的属性了。
          *  将产品同步到搜索表的时候，就会把这些字段也添加进去.
          */
         $filterAttr = Yii::$service->search->filterAttr;
         if (is_array($filterAttr) && !empty($filterAttr)) {
-            Search::$_filterColumns = $filterAttr;
+            $sModel::$_filterColumns = $filterAttr;
         }
     }
 
@@ -44,6 +60,7 @@ class MongoSearch extends Service implements SearchInterface
      */
     protected function actionInitFullSearchIndex()
     {
+        $sModel = $this->_searchModel;
         $config1 = [];
         $config2 = [];
         //var_dump($this->searchIndexConfig);exit;
@@ -63,16 +80,16 @@ class MongoSearch extends Service implements SearchInterface
                  * 能够进行搜索的语言列表：https://docs.mongodb.com/manual/reference/text-search-languages/#text-search-languages
                  */
                 if ($mongoSearchLangName) {
-                    Search::$_lang = $langCode;
-                    $searchModel = new Search();
-                    $colltionM = $searchModel::getCollection();
+                    $sModel::$_lang = $langCode;
+                    $searchModel = new $this->_searchModelName();
+                    $colltionM = $searchModel->getCollection();
                     $config2['default_language'] = $mongoSearchLangName;
                     $colltionM->createIndex($config1, $config2);
                 }
             }
         }
         /*
-        $searchModel::getCollection()->ensureIndex(
+        $searchModel->getCollection()->ensureIndex(
             [
                 'name' => 'text',
                 'description' => 'text',
@@ -90,14 +107,15 @@ class MongoSearch extends Service implements SearchInterface
     }
 
     /**
-     * @property $product_ids |　Array ，里面的子项是MongoId类型。
+     * @param $product_ids |　Array ，里面的子项是MongoId类型。
      * 将产品表的数据同步到各个语言对应的搜索表中。
      */
     protected function actionSyncProductInfo($product_ids, $numPerPage)
     {
+        $sModel = $this->_searchModel;
         if (is_array($product_ids) && !empty($product_ids)) {
             $productPrimaryKey = Yii::$service->product->getPrimaryKey();
-            $searchModel = new Search();
+            $searchModel = new $this->_searchModelName();
             $filter['select'] = $searchModel->attributes();
             $filter['asArray'] = true;
             $filter['where'][] = ['in', $productPrimaryKey, $product_ids];
@@ -106,6 +124,8 @@ class MongoSearch extends Service implements SearchInterface
             $coll = Yii::$service->product->coll($filter);
             if (is_array($coll['coll']) && !empty($coll['coll'])) {
                 foreach ($coll['coll'] as $one) {
+                    $one['product_id'] = $one['_id'];
+                    unset($one['_id']);
                     //$langCodes = Yii::$service->fecshoplang->allLangCode;
                     //if(!empty($langCodes) && is_array($langCodes)){
                     //	foreach($langCodes as $langCodeInfo){
@@ -114,10 +134,11 @@ class MongoSearch extends Service implements SearchInterface
                     $one_short_description = $one['short_description'];
                     if (!empty($this->searchLang) && is_array($this->searchLang)) {
                         foreach ($this->searchLang as $langCode => $mongoSearchLangName) {
-                            Search::$_lang = $langCode;
-                            $searchModel = Search::findOne(['_id' => $one['_id']]);
-                            if (!$searchModel['_id']) {
-                                $searchModel = new Search();
+                            $sModel::$_lang = $langCode;
+                            $searchModel = $this->_searchModel->findOne(['product_id' => $one['product_id']]);
+                            
+                            if (!$searchModel['product_id']) {
+                                $searchModel = new $this->_searchModelName();
                             }
                             $one['name'] = Yii::$service->fecshoplang->getLangAttrVal($one_name, 'name', $langCode);
                             $one['description'] = Yii::$service->fecshoplang->getLangAttrVal($one_description, 'description', $langCode);
@@ -134,29 +155,32 @@ class MongoSearch extends Service implements SearchInterface
                 }
             }
         }
-
+        //echo "MongoSearch sync done ... \n";
+        
         return true;
     }
 
     /**
+     * @param $nowTimeStamp | int
      * 批量更新过程中，被更新的产品都会更新字段sync_updated_at
      * 删除xunSearch引擎中sync_updated_at小于$nowTimeStamp的字段.
      */
     protected function actionDeleteNotActiveProduct($nowTimeStamp)
     {
+        $sModel = $this->_searchModel;
         echo "begin delete Mongodb Search Date \n";
         //$langCodes = Yii::$service->fecshoplang->allLangCode;
         //if(!empty($langCodes) && is_array($langCodes)){
         //	foreach($langCodes as $langCodeInfo){
         if (!empty($this->searchLang) && is_array($this->searchLang)) {
             foreach ($this->searchLang as $langCode => $mongoSearchLangName) {
-                Search::$_lang = $langCode;
+                $sModel::$_lang = $langCode;
                 // 更新时间方式删除。
-                Search::deleteAll([
+                $this->_searchModel->deleteAll([
                     '<', 'sync_updated_at', (int) $nowTimeStamp,
                 ]);
                 // 不存在更新时间的直接删除掉。
-                Search::deleteAll([
+                $this->_searchModel->deleteAll([
                     'sync_updated_at' => [
                         '?exists' => false,
                     ],
@@ -167,11 +191,11 @@ class MongoSearch extends Service implements SearchInterface
 
     protected function actionRemoveByProductId($product_id)
     {
-        //echo 1;exit;
+        $sModel = $this->_searchModel;
         if (!empty($this->searchLang) && is_array($this->searchLang)) {
             foreach ($this->searchLang as $langCode => $mongoSearchLangName) {
-                Search::$_lang = $langCode;
-                Search::deleteAll([
+                $sModel::$_lang = $langCode;
+                $this->_searchModel->deleteAll([
                     '_id' => $product_id,
                 ]);
             }
@@ -181,21 +205,48 @@ class MongoSearch extends Service implements SearchInterface
     }
 
     /**
+     * @param $select | Array
+     * @param $where | Array
+     * @param $pageNum | Int
+     * @param $numPerPage | Array
+     * @param $product_search_max_count | Int ， 搜索结果最大产品数。
+     * 对于上面的参数和以前的$filter类似，大致和下面的类似
+     * [
+     *	'category_id' 	=> 1,
+     *	'pageNum'		=> 2,
+     *	'numPerPage'	=> 50,
+     *	'orderBy'		=> 'name',
+     *	'where'			=> [
+     *		['>','price',11],
+     *		['<','price',22],
+     *	],
+     *	'select'		=> ['xx','yy'],
+     *	'group'			=> '$spu',
+     * ]
      * 得到搜索的产品列表.
      */
     protected function actionGetSearchProductColl($select, $where, $pageNum, $numPerPage, $product_search_max_count)
     {
-        $filter = [
-            'pageNum'        => $pageNum,
-            'numPerPage'    => $numPerPage,
-            'where'        => $where,
-            'product_search_max_count' => $product_search_max_count,
-            'select'         => $select,
-        ];
-        //var_dump($filter);exit;
-        $collection = $this->fullTearchText($filter);
+        // 先进行sku搜索，如果有结果，说明是针对sku的搜索
+        $enableStatus = Yii::$service->product->getEnableStatus();
+        $searchText = $where['$text']['$search'];
+        $productM = Yii::$service->product->getBySku($searchText);
+        if ($productM && $enableStatus == $productM['status']) {
+            $collection['coll'][] = $productM;
+            $collection['count'] = 1;
+        } else {
+            $filter = [
+                'pageNum'        => $pageNum,
+                'numPerPage'    => $numPerPage,
+                'where'        => $where,
+                'product_search_max_count' => $product_search_max_count,
+                'select'         => $select,
+            ];
+            //var_dump($filter);exit;
+            $collection = $this->fullTearchText($filter);
+        }
         $collection['coll'] = Yii::$service->category->product->convertToCategoryInfo($collection['coll']);
-
+        //var_dump($collection);
         return $collection;
     }
 
@@ -216,7 +267,11 @@ class MongoSearch extends Service implements SearchInterface
      */
     protected function fullTearchText($filter)
     {
+        $sModel = $this->_searchModel;
         $where = $filter['where'];
+        if (!isset($where['status'])) {
+            $where['status'] = Yii::$service->product->getEnableStatus();
+        }
         $product_search_max_count = $filter['product_search_max_count'] ? $filter['product_search_max_count'] : 1000;
 
         $select = $filter['select'];
@@ -229,40 +284,50 @@ class MongoSearch extends Service implements SearchInterface
          *		    详细参看：https://docs.mongodb.com/manual/core/text-search-operators/
          *		 2. sort排序：search_score是全文搜索匹配后的得分，score是product表的一个字段，这个字段可以通过销售量或者其他作为参考设置。
          */
-        Search::$_lang = Yii::$service->store->currentLangCode;
-        //$search_data = Search::getCollection();
+        $sModel::$_lang = Yii::$service->store->currentLangCode;
+        //$search_data = $this->_searchModel->getCollection();
 
         //$mongodb = Yii::$app->mongodb;
         //$search_data = $mongodb->getCollection('full_search_product_en')
 
-        $search_data = Search::getCollection()->find(
+        $search_data = $this->_searchModel->getCollection()->find(
             $where,
-            ['search_score'=>['$meta'=>'textScore'], 'id' => 1, 'spu'=> 1, 'score' => 1],
+            ['search_score'=>['$meta'=>'textScore'], 'id' => 1, 'spu'=> 1, 'score' => 1,'product_id' => 1],
             [
                 'sort' => ['search_score'=> ['$meta'=> 'textScore'], 'score' => -1],
                 'limit'=> $product_search_max_count,
             ]
         );
         /**
-         * 通过下面的数组，在spu相同的多个sku产品，只显示一个，因为上面已经排序，
-         * 因此，spu相同的sku产品，显示的是score最高的一个。
+         * 在搜索页面, spu相同的sku，是否只显示其中score高的sku，其他的sku隐藏
+         * 如果设置为true，那么在搜索结果页面，spu相同，sku不同的产品，只会显示score最高的那个产品
+         * 如果设置为false，那么在搜索结果页面，所有的sku都显示。
+         * 这里做设置的好处，譬如服装，一个spu的不同颜色尺码可能几十个产品，都显示出来会占用很多的位置，对于这种产品您可以选择设置true
+         * 这个针对的京东模式的产品
          */
         $data = [];
-        foreach ($search_data as $one) {
-            if (!isset($data[$one['spu']])) {
-                $data[$one['spu']] = $one;
+        if (Yii::$service->search->productSpuShowOnlyOneSku) {
+            foreach ($search_data as $one) {
+                if (!isset($data[$one['spu']])) {
+                    $data[$one['spu']] = $one;
+                }
             }
+        } else {
+            $data = $search_data;
         }
+            
         $count = count($data);
         $offset = ($pageNum - 1) * $numPerPage;
         $limit = $numPerPage;
         $productIds = [];
         foreach ($data as $d) {
-            $productIds[] = $d['_id'];
+            $productIds[] = $d['product_id'];
         }
+        
         $productIds = array_slice($productIds, $offset, $limit);
+        
         if (!empty($productIds)) {
-            $query = Product::find()->asArray()
+            $query = $this->_productModel->find()->asArray()
                     ->select($select)
                     ->where(['_id'=> ['$in'=>$productIds]]);
             $data = $query->all();
@@ -271,14 +336,19 @@ class MongoSearch extends Service implements SearchInterface
              */
             $s_data = [];
             foreach ($data as $one) {
-                $_id = (string) $one['_id'];
-                $s_data[$_id] = $one;
+                if ($one['_id']) {
+                    $_id = (string) $one['_id'];
+                    $s_data[$_id] = $one;
+                }
             }
             $return_data = [];
             foreach ($productIds as $product_id) {
-                $return_data[] = $s_data[(string) $product_id];
+                $pid = (string) $product_id;
+                if (isset($s_data[$pid]) && $s_data[$pid]) {
+                    $return_data[] = $s_data[$pid];
+                }
             }
-
+            
             return [
                 'coll' => $return_data,
                 'count'=> $count,
@@ -287,7 +357,7 @@ class MongoSearch extends Service implements SearchInterface
     }
 
     /**
-     * @property $filter_attr | String 需要进行统计的字段名称
+     * @param $filter_attr | String 需要进行统计的字段名称
      * @propertuy $where | Array  搜索条件。这个需要些mongodb的搜索条件。
      * 得到的是个属性，以及对应的个数。
      * 这个功能是用于前端分类侧栏进行属性过滤。
@@ -311,8 +381,9 @@ class MongoSearch extends Service implements SearchInterface
                 '$group'    => $group,
             ],
         ];
-        Search::$_lang = Yii::$service->store->currentLangCode;
-        $filter_data = Search::getCollection()->aggregate($pipelines);
+        $sModel = $this->_searchModel;
+        $sModel::$_lang = Yii::$service->store->currentLangCode;
+        $filter_data = $this->_searchModel->getCollection()->aggregate($pipelines);
 
         return $filter_data;
     }

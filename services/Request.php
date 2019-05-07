@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,7 +10,7 @@
 
 namespace fecshop\services;
 
-use fecshop\models\mongodb\UrlRewrite;
+//use fecshop\models\mongodb\UrlRewrite;
 use Yii;
 use yii\base\InvalidConfigException;
 
@@ -24,6 +25,16 @@ use yii\base\InvalidConfigException;
  */
 class Request extends \yii\web\Request
 {
+    protected $_urlRewriteModelName = '\fecshop\models\mongodb\UrlRewrite';
+
+    protected $_urlRewriteModel;
+    
+    public function init()
+    {
+        parent::init();
+        list($this->_urlRewriteModelName, $this->_urlRewriteModel) = \Yii::mapGet($this->_urlRewriteModelName);
+    }
+
     /**
      * rewrite yii\web\Request  resolveRequestUri().
      */
@@ -121,11 +132,11 @@ class Request extends \yii\web\Request
 
     /**
      *  mongodb url_rewrite collection columns: _id,  type ,custom_url, yii_url,
-     *	if selete date from UrlRewrite, return the yii url.
+     *	if selete date from $this->_urlRewriteModel, return the yii url.
      */
     protected function getOriginUrl($urlKey)
     {
-        $UrlData = UrlRewrite::find()->where([
+        $UrlData = $this->_urlRewriteModel->find()->where([
             'custom_url_key' => $urlKey,
         ])->asArray()->one();
         if ($UrlData['custom_url_key']) {

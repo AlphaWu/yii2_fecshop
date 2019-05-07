@@ -9,7 +9,7 @@
 
 namespace fecshop\app\appfront\modules\Catalog\block\reviewproduct;
 
-use fecshop\app\appfront\modules\Catalog\helpers\Review as ReviewHelper;
+//use fecshop\app\appfront\modules\Catalog\helpers\Review as ReviewHelper;
 use Yii;
 
 /**
@@ -19,12 +19,24 @@ use Yii;
 class Add
 {
     protected $_add_captcha;
+    /**
+     * 为了可以使用rewriteMap，use 引入的文件统一采用下面的方式，通过Yii::mapGet()得到className和Object
+     */
+    protected $_reviewHelperName = '\fecshop\app\appfront\modules\Catalog\helpers\Review';
+    protected $_reviewHelper;
 
     public function __construct()
     {
-        ReviewHelper::initReviewConfig();
+        /**
+         * 通过Yii::mapGet() 得到重写后的class类名以及对象。Yii::mapGet是在文件@fecshop\yii\Yii.php中
+         */
+        list($this->_reviewHelperName,$this->_reviewHelper) = Yii::mapGet($this->_reviewHelperName);  
+        $reviewHelper = $this->_reviewHelper;
+        $reviewHelper::initReviewConfig();
     }
-
+    /**
+     * @return boolean , review页面是否开启验证码验证。
+     */
     public function getAddCaptcha()
     {
         if (!$this->_add_captcha) {
@@ -77,7 +89,10 @@ class Add
             'url'        => Yii::$service->url->getUrl($url_key),
         ];
     }
-
+    /**
+     * @param $editForm | Array
+     * @return boolean ，保存评论信息
+     */
     public function saveReview($editForm)
     {
         $add_captcha = $this->getAddCaptcha();
@@ -85,48 +100,54 @@ class Add
         if (!$product_id) {
             Yii::$service->page->message->addError(['Product id can not empty']);
 
-            return;
+            return false;
         }
         $rate_star = isset($editForm['rate_star']) ? $editForm['rate_star'] : '';
         if (!$rate_star) {
             Yii::$service->page->message->addError(['Rate Star can not empty']);
 
-            return;
+            return false;
         }
         $name = isset($editForm['name']) ? $editForm['name'] : '';
         if (!$name) {
             Yii::$service->page->message->addError(['Your Name can not empty']);
 
-            return;
+            return false;
         }
         $summary = isset($editForm['summary']) ? $editForm['summary'] : '';
         if (!$summary) {
             Yii::$service->page->message->addError(['Summary can not empty']);
 
-            return;
+            return false;
         }
         $review_content = isset($editForm['review_content']) ? $editForm['review_content'] : '';
         if (!$review_content) {
             Yii::$service->page->message->addError(['Review content can not empty']);
 
-            return;
+            return false;
         }
         // captcha validate
         $captcha = isset($editForm['captcha']) ? $editForm['captcha'] : '';
         if ($add_captcha && !$captcha) {
             Yii::$service->page->message->addError(['Captcha can not empty']);
 
-            return;
+            return false;
         } elseif ($captcha && $add_captcha && !\Yii::$service->helper->captcha->validateCaptcha($captcha)) {
             Yii::$service->page->message->addError(['Captcha is not right']);
 
-            return;
+            return false;
         }
         $product = Yii::$service->product->getByPrimaryKey($product_id);
         if (!$product['spu']) {
             Yii::$service->page->message->addError('product _id:'.$product_id.'  is not exist in product collection');
 
-            return;
+            return false;
+        }
+        // 用户是否有添加这个产品的权限
+        if (!Yii::$service->product->review->isReviewRole($product_id)) {
+            Yii::$service->page->message->addError('product _id:'.$product_id.'  , you review this product only after ordered it');
+            
+            return false;
         }
         $editForm['spu'] = $product['spu'];
         $editForm['status'] = $product['spu'];
@@ -135,7 +156,10 @@ class Add
 
         return true;
     }
-
+    /**
+     * @param $product | String Or Object
+     * 得到产品的价格信息
+     */
     protected function getProductPriceInfo($product)
     {
         $price = $product['price'];
@@ -145,7 +169,7 @@ class Add
 
         return Yii::$service->product->price->getCurrentCurrencyProductPriceInfo($price, $special_price, $special_from, $special_to);
     }
-
+    // 废弃
     protected function getSpuData()
     {
         $spu = $this->_product['spu'];

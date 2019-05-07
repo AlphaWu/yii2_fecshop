@@ -1,4 +1,13 @@
 <?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
+<?php
 use fecshop\app\apphtml5\helper\Format;
 ?>
 <div class="account-ds">
@@ -19,16 +28,16 @@ use fecshop\app\apphtml5\helper\Format;
 				<div class="my_account_order">
 					<table class="page-title title-buttons">
 						<tbody>
-							<tr><td><?= Yii::$service->page->translate->__('Order# :');?></td><td><?=  $increment_id ?>	</td></tr>		
-							<tr><td><?= Yii::$service->page->translate->__('Order Status:');?></td><td><?= Yii::$service->page->translate->__($order_status);?></td></tr>		
-							<tr><td><?= Yii::$service->page->translate->__('Order Date:');?></td><td><?=  date('Y-m-d H:i:s',$created_at); ?></td></tr>								
+							<tr><td><?= Yii::$service->page->translate->__('Order#');?> :</td><td><?=  $increment_id ?>	</td></tr>		
+							<tr><td><?= Yii::$service->page->translate->__('Order Status');?>:</td><td><?= Yii::$service->page->translate->__($order_status);?></td></tr>		
+							<tr><td><?= Yii::$service->page->translate->__('Order Date');?>:</td><td><?=  date('Y-m-d H:i:s',$created_at); ?></td></tr>								
 						</tbody>
 					</table>
 					<div class="col2-set order-info-box">
 						<div class="col-1">
 							<div class="box">
 							<div class="box-title">
-								<h5><?= Yii::$service->page->translate->__('Shipping Address:');?></h5>
+								<h5><?= Yii::$service->page->translate->__('Shipping Address');?>:</h5>
 							</div>
 							<div class="box-content">
 								<table>
@@ -45,7 +54,7 @@ use fecshop\app\apphtml5\helper\Format;
 						<div class="col-2">
 							<div class="box">
 								<div class="box-title">
-									<h5><?= Yii::$service->page->translate->__('Shipping Method:');?></h5>
+									<h5><?= Yii::$service->page->translate->__('Shipping Method');?>:</h5>
 								</div>
 								<div class="box-content">
 									<table>
@@ -54,11 +63,26 @@ use fecshop\app\apphtml5\helper\Format;
 										</tbody>
 									</table>
 								</div>
-							</div>				</div>
+							</div>				
+                        </div>
+                        <div class="col-2">
+							<div class="box">
+								<div class="box-title">
+									<h5><?= Yii::$service->page->translate->__('Tracking Number');?>:</h5>
+								</div>
+								<div class="box-content">
+									<table>
+										<tbody>
+											<tr><td><?=  $tracking_number ? $tracking_number : Yii::$service->page->translate->__('null') ?></td></tr>  
+										</tbody>
+									</table>
+								</div>
+							</div>				
+                        </div>
 						<div class="col-2">
 							<div class="box box-payment">
 								<div class="box-title">
-									<h5><?= Yii::$service->page->translate->__('Payment Method:');?></h5>
+									<h5><?= Yii::$service->page->translate->__('Payment Method');?>:</h5>
 								</div>
 								<div class="box-content">
 									<table>
@@ -72,42 +96,44 @@ use fecshop\app\apphtml5\helper\Format;
 					</div>
 					
 					<div class="order-items order-details box-title">
-						<h5 class="table-caption"><?= Yii::$service->page->translate->__('Items Ordered:');?></h5>
+						<h5 class="table-caption"><?= Yii::$service->page->translate->__('Items Ordered');?>:</h5>
 
 						<table summary="Items Ordered" id="my-orders-table" class="data-table">
 							<colgroup>
-							<col width="1">
-							<col width="1">
-							<col width="1">
-							<col width="1">
-							</colgroup>
+                                <col>
+                                <col width="1">
+                                <col width="1">
+                                <col width="1">
+                                <col width="1">
+ 							</colgroup>
 							<thead>
 								<tr class="first last">
 									<th><?= Yii::$service->page->translate->__('Product Image');?></th>
 									<th><?= Yii::$service->page->translate->__('Product Info');?></th>
 									<th class="a-center"><?= Yii::$service->page->translate->__('Qty');?></th>
+                                    <th class="a-center"><?= Yii::$service->page->translate->__('Review');?></th>
 									<th class="a-right"><?= Yii::$service->page->translate->__('Subtotal');?></th>
 								</tr>
 							</thead>
 							<tfoot>
 								<tr class="subtotal first">
-									<td class="a-right" colspan="3"><?= Yii::$service->page->translate->__('Subtotal');?></td>
-									<td class="last a-right"><span class="price"><?= $currency_symbol ?><?=  Format::price($subtotal); ?></span></td>
+									<td class="a-right" colspan="4"><?= Yii::$service->page->translate->__('Subtotal');?></td>
+									<td class="last a-center"><span class="price"><?= $currency_symbol ?><?=  Format::price($subtotal); ?></span></td>
 								</tr>
 								<tr class="shipping">
-									<td class="a-right" colspan="3"><?= Yii::$service->page->translate->__('Shipping Cost');?></td>
-									<td class="last a-right">
+									<td class="a-right" colspan="4"><?= Yii::$service->page->translate->__('Shipping Cost');?></td>
+									<td class="last a-center">
 										<span class="price"><?= $currency_symbol ?><?=  Format::price($shipping_total); ?></span>    
 									</td>
 								</tr>
 								<tr class="discount">
-									<td class="a-right" colspan="3"><?= Yii::$service->page->translate->__('Discount');?></td>
-									<td class="last a-right">
+									<td class="a-right" colspan="4"><?= Yii::$service->page->translate->__('Discount');?></td>
+									<td class="last a-center">
 										<span class="price"><?= $currency_symbol ?><?=  Format::price($subtotal_with_discount); ?></span>    
 									</td>
 								</tr>
 								<tr class="grand_total last">
-									<td class="a-right" colspan="3">
+									<td class="a-center" colspan="4">
 										<strong><?= Yii::$service->page->translate->__('Grand Total');?></strong>
 									</td>
 									<td class="last a-right">
@@ -116,8 +142,8 @@ use fecshop\app\apphtml5\helper\Format;
 								</tr>
 							</tfoot>
 							<tbody class="odd">
-								<?php if(is_array($products) && !empty($products)){  ?>
-									<?php foreach($products as $product){ ?>
+								<?php if(is_array($products) && !empty($products)):  ?>
+									<?php foreach($products as $product): ?>
 									<tr id="order-item-row" class="border first">	
 										<td>
 											<a href="<?=  Yii::$service->url->getUrl($product['redirect_url']) ; ?>">
@@ -126,23 +152,31 @@ use fecshop\app\apphtml5\helper\Format;
 										</td>
 										<td>
 											<div><?= Yii::$service->page->translate->__('sku')?>:<?= $product['sku'] ?></div>
-											<?php  if(is_array($product['custom_option_info'])){  ?>
+											<?php  if(is_array($product['custom_option_info'])):  ?>
 											
-												<?php foreach($product['custom_option_info'] as $label => $val){  ?>
+												<?php foreach($product['custom_option_info'] as $label => $val):  ?>
 													<div>
 														<?= Yii::$service->page->translate->__($label.':') ?><?= Yii::$service->page->translate->__($val) ?>
 													</div>
-												<?php }  ?>
+												<?php endforeach;  ?>
 											
-											<?php }  ?>
+											<?php endif;  ?>
 											
 											<dl class="item-options">
 											</dl>
 										</td>
 										
-										<td class="a-right">
+										<td class="a-center">
 											<span class="nobr" ><strong><?= $product['qty'] ?></strong><br>
 											</span>
+										</td>
+                                        <td class="a-center">
+											<a style="font-size:1em" href="<?= Yii::$service->url->getUrl('/catalog/reviewproduct/add',['_id' => $product['product_id']])  ?>">
+                                                <span class="" >
+                                                    Review 
+                                                    <br>
+                                                </span>
+                                            </a>
 										</td>
 										<td class="a-right last">
 											<span class="price-excl-tax">
@@ -153,8 +187,8 @@ use fecshop\app\apphtml5\helper\Format;
 											<br>
 										</td>
 									</tr>
-									<?php } ?>
-								<?php } ?>
+									<?php endforeach; ?>
+								<?php endif; ?>
 								</tbody>								   
 						</table>
 					</div>

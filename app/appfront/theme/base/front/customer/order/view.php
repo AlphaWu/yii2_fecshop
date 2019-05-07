@@ -1,7 +1,17 @@
 <?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
+<?php
 use fecshop\app\appfront\helper\Format;
 ?>
 <div class="main container two-columns-left">
+    <?= Yii::$service->page->widget->render('breadcrumbs',$this); ?>
 	<div class="col-main account_center">
 		<div class="std">
 			<div style="margin:19px 0 0">
@@ -13,17 +23,22 @@ use fecshop\app\appfront\helper\Format;
 					<div class="col2-set order-info-box">
 						<div class="col-1">
 							<div class="box">
-							<div class="box-title">
-								<h2><?= Yii::$service->page->translate->__('Shipping Address');?></h2>
-							</div>
-							<div class="box-content">
-								<address><?=  $customer_firstname ?> <?=  $customer_lastname ?><br>
-								<?=  $customer_address_street1 ?><br><?=  $customer_address_street2 ?><br><?=  $customer_address_city ?>,<?=  $customer_address_state_name ?>,<?=  $customer_address_country_name ?><br>
-								<?= Yii::$service->page->translate->__('T:');?><?=  $customer_telephone ?>
-
-								</address>
-							</div>
-						</div>				</div>
+                                <div class="box-title">
+                                    <h2><?= Yii::$service->page->translate->__('Shipping Address');?></h2>
+                                </div>
+                                <div class="box-content">
+                                    <address><?=  $customer_firstname ?> <?=  $customer_lastname ?><br>
+                                    <?=  $customer_address_street1 ?><br><?=  $customer_address_street2 ?><br><?=  $customer_address_city ?>,<?=  $customer_address_state_name ?>,<?=  $customer_address_country_name ?><br>
+                                    <?= Yii::$service->page->translate->__('T:');?><?=  $customer_telephone ?>
+                                    <br>
+                                    <?= Yii::$service->page->translate->__('Tracking Number');?>: 
+                                        <span style="color:#777;">
+                                            <?=  $tracking_number ? $tracking_number : Yii::$service->page->translate->__('null') ?>
+                                        </span>
+                                    </address>
+                                </div>
+                            </div>				
+                        </div>
 						<div class="col-2">
 							<div class="box">
 								<div class="box-title">
@@ -41,18 +56,20 @@ use fecshop\app\appfront\helper\Format;
 								<div class="box-content">
 									<p><strong><?=  $payment_method ?></strong></p>
 								</div>
-							</div>				</div>
+							</div>				
+                        </div>
 					</div>
 					
 					<div class="order-items order-details">
 						<h2 class="table-caption"><?= Yii::$service->page->translate->__('Items Ordered');?></h2>
 
 						<table summary="Items Ordered" id="my-orders-table" class="data-table">
-							<colgroup><col>
-							<col width="1">
-							<col width="1">
-							<col width="1">
-							<col width="1">
+							<colgroup>
+                                <col>
+                                <col width="1">
+                                <col width="1">
+                                <col width="1">
+                                <col width="1">
 							</colgroup>
 							<thead>
 								<tr class="first last">
@@ -61,38 +78,39 @@ use fecshop\app\appfront\helper\Format;
 									<th><?= Yii::$service->page->translate->__('Sku');?></th>
 									<th class="a-right"><?= Yii::$service->page->translate->__('Price');?></th>
 									<th class="a-center"><?= Yii::$service->page->translate->__('Qty');?></th>
-									<th class="a-right"><?= Yii::$service->page->translate->__('Subtotal');?></th>
+                                    <th class="a-center"><?= Yii::$service->page->translate->__('Review');?></th>
+									<th class="a-center"><?= Yii::$service->page->translate->__('Subtotal');?></th>
 								</tr>
 							</thead>
 							<tfoot>
 								<tr class="subtotal first">
-									<td class="a-right" colspan="5"><?= Yii::$service->page->translate->__('Subtotal');?></td>
-									<td class="last a-right"><span class="price"><?= $currency_symbol ?><?=  Format::price($subtotal); ?></span></td>
+									<td class="a-right" colspan="6"><?= Yii::$service->page->translate->__('Subtotal');?></td>
+									<td class="last a-center"><span class="price"><?= $currency_symbol ?><?=  Format::price($subtotal); ?></span></td>
 								</tr>
 								<tr class="shipping">
-									<td class="a-right" colspan="5"><?= Yii::$service->page->translate->__('Shipping Cost');?></td>
-									<td class="last a-right">
+									<td class="a-right" colspan="6"><?= Yii::$service->page->translate->__('Shipping Cost');?></td>
+									<td class="last a-center">
 										<span class="price"><?= $currency_symbol ?><?=  Format::price($shipping_total); ?></span>    
 									</td>
 								</tr>
 								<tr class="discount">
-									<td class="a-right" colspan="5"><?= Yii::$service->page->translate->__('Discount');?></td>
-									<td class="last a-right">
+									<td class="a-right" colspan="6"><?= Yii::$service->page->translate->__('Discount');?></td>
+									<td class="last a-center">
 										<span class="price"><?= $currency_symbol ?><?=  Format::price($subtotal_with_discount); ?></span>    
 									</td>
 								</tr>
 								<tr class="grand_total last">
-									<td class="a-right" colspan="5">
+									<td class="a-right" colspan="6">
 										<strong><?= Yii::$service->page->translate->__('Grand Total');?></strong>
 									</td>
-									<td class="last a-right">
+									<td class="last a-center">
 										<strong><span class="price"><?= $currency_symbol ?><?=  Format::price($grand_total); ?></span></strong>
 									</td>
 								</tr>
 							</tfoot>
 							<tbody class="odd">
-								<?php if(is_array($products) && !empty($products)){  ?>
-									<?php foreach($products as $product){ ?>
+								<?php if(is_array($products) && !empty($products)):  ?>
+									<?php foreach($products as $product): ?>
 									<tr id="order-item-row" class="border first">	
 										<td>
 											<a href="<?=  Yii::$service->url->getUrl($product['redirect_url']) ; ?>">
@@ -100,15 +118,15 @@ use fecshop\app\appfront\helper\Format;
 													<?= $product['name'] ?>
 												</h3>
 											</a>
-											<?php  if(is_array($product['custom_option_info'])){  ?>
+											<?php  if(is_array($product['custom_option_info'])):  ?>
 											<ul>
-												<?php foreach($product['custom_option_info'] as $label => $val){  ?>
+												<?php foreach($product['custom_option_info'] as $label => $val):  ?>
 													
 													<li><?= Yii::$service->page->translate->__($label.':') ?><?= Yii::$service->page->translate->__($val) ?> </li>
 													
-												<?php }  ?>
+												<?php endforeach;  ?>
 											</ul>
-											<?php }  ?>
+											<?php endif;  ?>
 											<dl class="item-options">
 												
 											</dl>
@@ -128,11 +146,21 @@ use fecshop\app\appfront\helper\Format;
 											</span>
 											<br>
 										</td>
-										<td class="a-right">
-											<span class="nobr" ><strong><?= $product['qty'] ?></strong><br>
+										<td class="a-center">
+											<span class="nobr" >
+                                                <strong><?= $product['qty'] ?></strong>
+                                                <br>
 											</span>
 										</td>
-										<td class="a-right last">
+                                        <td class="a-center">
+											<a href="<?= Yii::$service->url->getUrl('/catalog/reviewproduct/add',['_id' => $product['product_id']])  ?>">
+                                                <span class="" >
+                                                    Review 
+                                                    <br>
+                                                </span>
+                                            </a>
+										</td>
+										<td class="a-center last">
 											<span class="price-excl-tax">
 												<span class="cart-price">
 													<span class="price"><?= $currency_symbol ?><?= Format::price($product['row_total']); ?></span>                    
@@ -141,8 +169,8 @@ use fecshop\app\appfront\helper\Format;
 											<br>
 										</td>
 									</tr>
-									<?php } ?>
-								<?php } ?>
+									<?php endforeach; ?>
+								<?php endif; ?>
 								</tbody>								   
 						</table>
 						<br/>
@@ -151,10 +179,8 @@ use fecshop\app\appfront\helper\Format;
 						</div>
 					</div>
 				</div>
-
 			</div>
 		</div>
-
 	</div>
 	
 	<div class="col-left ">

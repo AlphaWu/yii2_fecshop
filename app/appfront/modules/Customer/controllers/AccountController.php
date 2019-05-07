@@ -20,7 +20,7 @@ class AccountController extends AppfrontController
 {
     //protected $_registerSuccessRedirectUrlKey = 'customer/account';
 
-    public $enableCsrfValidation = false;
+    public $enableCsrfValidation = true;
 
     public function init()
     {
@@ -45,12 +45,10 @@ class AccountController extends AppfrontController
      */
     public function actionLogin()
     {
-        /*
-        $toEmail = 'zqy234@126.com';
-        // \fecshop\app\appfront\modules\Mailer\Email::sendLoginEmail($toEmail);
-        \fecshop\app\appfront\modules\Mailer\Email::sendRegisterEmail($toEmail);
-        exit;
-        */
+        if (Yii::$service->store->isAppServerMobile()) {
+            $urlPath = 'customer/account/login';
+            Yii::$service->store->redirectAppServerMobile($urlPath);
+        }
         if (!Yii::$app->user->isGuest) {
             return Yii::$service->url->redirectByUrlKey('customer/account');
         }
@@ -71,6 +69,10 @@ class AccountController extends AppfrontController
      */
     public function actionRegister()
     {
+        if (Yii::$service->store->isAppServerMobile()) {
+            $urlPath = 'customer/account/register';
+            Yii::$service->store->redirectAppServerMobile($urlPath);
+        }
         if (!Yii::$app->user->isGuest) {
             return Yii::$service->url->redirectByUrlKey('customer/account');
         }
@@ -113,8 +115,6 @@ class AccountController extends AppfrontController
         }
         if ($rt) {
             $redirectUrl = base64_decode($rt);
-            $redirectUrl = \Yii::$service->helper->htmlEncode($redirectUrl);
-            //exit;
             Yii::$service->url->redirect($redirectUrl);
         } else {
             Yii::$service->url->redirect(Yii::$service->url->HomeUrl());
@@ -164,8 +164,18 @@ class AccountController extends AppfrontController
                 Yii::$service->url->redirect($redirectUrl);
             }
         }
-
+        $this->breadcrumbs(Yii::$service->page->translate->__('Reset Password Submit'));
         return $this->render($this->action->id, $data);
+    }
+    
+     // 面包屑导航
+    protected function breadcrumbs($name)
+    {
+        if (Yii::$app->controller->module->params['forgot_reset_password_submit_breadcrumbs']) {
+            Yii::$service->page->breadcrumbs->addItems(['name' => $name]);
+        } else {
+            Yii::$service->page->breadcrumbs->active = false;
+        }
     }
 
     public function actionResetpassword()

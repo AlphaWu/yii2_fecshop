@@ -22,8 +22,8 @@
 				<?=  $description ?>
 			</div>
 			<div class="sort_filter">
-				<a href="#" class="category-open open-sort">Sort &nbsp;<span class="icon icon-caret"></span></a>
-				<a href="#" class="category-open open-filter">Filter &nbsp;<span class="icon icon-caret"></span></a>
+				<a href="#" class="category-open open-sort"><?= Yii::$service->page->translate->__('Sort'); ?> &nbsp;<span class="icon icon-caret"></span></a>
+				<a href="#" class="category-open open-filter"><?= Yii::$service->page->translate->__('Filter'); ?> &nbsp;<span class="icon icon-caret"></span></a>
 				<div class="clear"></div>
 			</div>
 			<div > 
@@ -110,7 +110,7 @@
 			<?php
 				$parentThis = [
 					'query_item' => $query_item,
-					'product_page'=>$product_page,
+					//'product_page'=>$product_page,
 				];
 				$config = [
 					'view'  		=> 'catalog/category/index/toolbar.php',
@@ -212,3 +212,4 @@ $.init();
 <?php $this->endBlock(); ?>  
 </script>  
 <?php $this->registerJs($this->blocks['category_product_filter'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
+<?= Yii::$service->page->trace->getTraceCategoryJsCode($name_default_lang)  ?>

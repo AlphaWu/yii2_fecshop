@@ -1,19 +1,26 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="shopping-cart-img">
 	<?= Yii::$service->page->translate->__('Login'); ?>
-	
-	<a external href="<?= Yii::$service->url->getUrl('customer/account/register');  ?>" class="f-right"><?= Yii::$service->page->translate->__('Resister'); ?></a>
+	<a external href="<?= Yii::$service->url->getUrl('customer/account/register');  ?>" class="f-right"><?= Yii::$service->page->translate->__('Register'); ?></a>
 </div>
 <?= Yii::$service->page->widget->render('flashmessage'); ?>	
 <div class="list-block customer-login">
 	<form action="<?= Yii::$service->url->getUrl("customer/account/login");  ?>" method="post" id="login-form" class="account-form">
 		<ul>
-			
 			<li>
 				<div class="item-content">
 					<div class="item-media"><i class="icon icon-form-email"></i></div>
 					<div class="item-inner">
 						<div class="item-input">
-							<input name="editForm[email]" value="<?= $email; ?>" id="email" type="email" placeholder="E-mail">
+							<input name="editForm[email]" value="<?= $email; ?>" id="email" type="email" placeholder="<?= Yii::$service->page->translate->__('E-mail'); ?>">
 						</div>
 					</div>
 				</div>
@@ -23,18 +30,18 @@
 					<div class="item-media"><i class="icon icon-form-password"></i></div>
 					<div class="item-inner">
 						<div class="item-input">
-							<input type="password" placeholder="Password"  name="editForm[password]" class="input-text required-entry validate-password" id="pass" title="Password" >
+							<input type="password" placeholder="<?= Yii::$service->page->translate->__('Password'); ?>"  name="editForm[password]" class="input-text required-entry validate-password" id="pass" title="Password" >
 						</div>
 					</div>
 				</div>
 			</li>
-			<?php if($loginPageCaptcha){  ?>
+			<?php if($loginPageCaptcha):  ?>
 			<li>
 				<div class="item-content">
 					<div class="item-media"><i class="icon icon-form-password"></i></div>
 					<div class="item-inner">
 						<div class="item-input">
-							<input placeholder="captcha" type="text" name="editForm[captcha]" value="" size=10 class="login-captcha-input"><img class="login-captcha-img"  title="<?= Yii::$service->page->translate->__('click refresh'); ?>" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
+							<input placeholder="captcha" type="text" name="editForm[captcha]" value="" size=10 class="login-captcha-input"><img class="login-captcha-img"  title="<?= Yii::$service->page->translate->__('click refresh'); ?>" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?<?php echo md5(time() . mt_rand(1,10000));?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
 							 <span class="icon icon-refresh"></span>
 						</div>
 					</div>
@@ -50,7 +57,7 @@
 				</script>  
 				<?php $this->registerJs($this->blocks['login_captcha_onclick_refulsh'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
 			</li>
-			<?php } ?>
+			<?php endif; ?>
 		</ul>
 		
 		<div class="clear"></div>

@@ -18,6 +18,8 @@ use Yii;
  */
 class ReviewproductController extends AppfrontController
 {
+    public $enableCsrfValidation = true;
+    
     public function init()
     {
         parent::init();
@@ -37,21 +39,21 @@ class ReviewproductController extends AppfrontController
             return Yii::$service->url->redirectByUrlKey('customer/account/login');
         }
         $editForm = Yii::$app->request->post('editForm');
-        $editForm = \Yii::$service->helper->htmlEncode($editForm);
+        $editForm = Yii::$service->helper->htmlEncode($editForm);
         if (!empty($editForm) && is_array($editForm)) {
             $saveStatus = $this->getBlock()->saveReview($editForm);
             if ($saveStatus) {
                 $spu = Yii::$app->request->get('spu');
                 $_id = Yii::$app->request->get('_id');
-                $spu = \Yii::$service->helper->htmlEncode($spu);
-                $_id = \Yii::$service->helper->htmlEncode($_id);
+                $spu = Yii::$service->helper->htmlEncode($spu);
+                $_id = Yii::$service->helper->htmlEncode($_id);
                 if ($spu && $_id) {
                     $url = Yii::$service->url->getUrl('catalog/reviewproduct/lists', ['spu' => $spu, '_id'=>$_id]);
-                    $this->redirect($url);
+                    return $this->redirect($url);
+                    
                 }
             }
         }
-        //echo 1;exit;
         $data = $this->getBlock()->getLastData($editForm);
 
         return $this->render($this->action->id, $data);
@@ -59,6 +61,11 @@ class ReviewproductController extends AppfrontController
 
     public function actionLists()
     {
+        if (Yii::$service->store->isAppServerMobile()) {
+            $product_id = Yii::$app->request->get('_id');
+            $urlPath = 'product/review/lists/'.$product_id;
+            Yii::$service->store->redirectAppServerMobile($urlPath);
+        }
         $data = $this->getBlock()->getLastData($editForm);
 
         return $this->render($this->action->id, $data);

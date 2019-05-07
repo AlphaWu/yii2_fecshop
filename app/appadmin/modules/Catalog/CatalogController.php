@@ -15,11 +15,12 @@ namespace fecshop\app\appadmin\modules\Catalog;
  */
 use fecadmin\FecadminbaseController;
 use Yii;
+use fecshop\app\appadmin\modules\AppadminController;
 
-class CatalogController extends FecadminbaseController
+class CatalogController extends AppadminController
 {
-    public function getViewPath()
-    {
-        return Yii::getAlias('@fecshop/app/appadmin/modules/Catalog/views') . DIRECTORY_SEPARATOR . $this->id;
-    }
+    //public function getViewPath()
+    //{
+    //    return Yii::getAlias('@fecshop/app/appadmin/modules/Catalog/views') . DIRECTORY_SEPARATOR . $this->id;
+    //}
 }

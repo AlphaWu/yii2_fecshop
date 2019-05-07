@@ -16,8 +16,10 @@ class Footer implements BlockCache
 
     public function getCacheKey()
     {
-        $lang = Yii::$service->store->currentLanguage;
-
-        return self::BLOCK_CACHE_PREFIX.'_'.$lang;
+        $lang           = Yii::$service->store->currentLangCode;
+        $appName        = Yii::$service->helper->getAppName();
+        $cacheKeyName   = 'footer';
+        $currentStore   = Yii::$service->store->currentStore;
+        return self::BLOCK_CACHE_PREFIX.'_'.$currentStore.'_'.$appName.'_'.$lang.'_'.$cacheKeyName;
     }
 }

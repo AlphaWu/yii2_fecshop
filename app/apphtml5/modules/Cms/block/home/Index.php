@@ -4,7 +4,7 @@
  * 都是数组
  */
 
-namespace fecshop\app\apphtml5\modules\cms\block\home;
+namespace fecshop\app\apphtml5\modules\Cms\block\home;
 
 use Yii;
 
@@ -49,9 +49,9 @@ class Index
             ];
             $filter['where'] = ['in', 'sku', $skus];
             $products = Yii::$service->product->getProducts($filter);
-            //var_dump($products);
+            //
             $products = Yii::$service->category->product->convertToCategoryInfo($products);
-
+            //var_dump($products);
             return $products;
         }
     }

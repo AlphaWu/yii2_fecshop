@@ -1,7 +1,15 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="main container two-columns-left">
 	<div class="col-main account_center">
-		<?= Yii::$service->page->widget->render('flashmessage'); ?>
-					
+		<?= Yii::$service->page->widget->render('flashmessage'); ?>			
 		<div class="std">
 			<div class="page-title">
 				<h2><?= Yii::$service->page->translate->__('Contact Information'); ?></h2>
@@ -45,12 +53,12 @@
 								<span id="contacts_comment_span"></span>
 							</div>
 						</li>
-						<?php  if($contactsCaptcha){  ?>
+						<?php  if($contactsCaptcha):  ?>
 						<li>
 							<label for="pass" class="required customertitle"><em>*</em><?= Yii::$service->page->translate->__('Captcha'); ?></label>
 							<div class="input-box login_box">
 								<input class="verification_code_input" maxlength="4" name="sercrity_code" value="" type="text">
-									<img class="login-captcha-img"  title="click refresh" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
+									<img class="login-captcha-img"  title="click refresh" src="<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?<?php echo md5(time() . mt_rand(1,10000));?>" align="absbottom" onclick="this.src='<?= Yii::$service->url->getUrl('site/helper/captcha'); ?>?'+Math.random();"></img>
 									<i class="refresh-icon"></i>
 								<br>
 								<script>
@@ -65,11 +73,11 @@
 								<?php $this->registerJs($this->blocks['login_captcha_onclick_refulsh'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
 							</div>
 						</li>
-						<?php  } ?>
+						<?php  endif; ?>
 					</ul>
 				</div>
 			<div class="buttons-set">
-			   <button type="submit" title="Save" class="button" ><span><span><?= Yii::$service->page->translate->__('Contact Us'); ?></span></span></button>
+			   <button type="submit" title="Save" class="button " ><span><span><?= Yii::$service->page->translate->__('Contact Us'); ?></span></span></button>
 			</div>
 		</form>
 		</div>

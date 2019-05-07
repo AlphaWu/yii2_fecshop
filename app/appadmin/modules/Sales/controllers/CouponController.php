@@ -17,6 +17,8 @@ use fecshop\app\appadmin\modules\Sales\SalesController;
  */
 class CouponController extends SalesController
 {
+    public $enableCsrfValidation = true;
+    
     public function actionManager()
     {
         $data = $this->getBlock()->getLastData();

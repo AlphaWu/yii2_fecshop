@@ -25,17 +25,17 @@
             </form>
 		</div>
 		<div class="category_menu">
-			<?php if(is_array($categoryArr) && !empty($categoryArr)){ ?>
+			<?php if(is_array($categoryArr) && !empty($categoryArr)): ?>
 				<ul>
-				<?php foreach($categoryArr as $category1){ ?>
+				<?php foreach($categoryArr as $category1): ?>
 					<li class="item-content">
 						<div class="item-title">
 							<a href="<?= $category1['url'] ?>" class="nav_t" external><?= $category1['name'] ?></a>	
 						</div>
 						<?php $childMenu1 = $category1['childMenu'];   ?>
-						<?php if(is_array($childMenu1) && !empty($childMenu1)){ ?>
+						<?php if(is_array($childMenu1) && !empty($childMenu1)): ?>
 							<ul>
-								<?php foreach($childMenu1 as $category2){ ?>
+								<?php foreach($childMenu1 as $category2): ?>
 									<span class="icon icon-right"></span>
 									<li class="item-content">
 										<div class="item-title">
@@ -44,27 +44,27 @@
 											</a>
 										</div>
 										<?php $childMenu2 = $category2['childMenu'];   ?>
-										<?php if(is_array($childMenu2) && !empty($childMenu2)){ ?>
+										<?php if(is_array($childMenu2) && !empty($childMenu2)): ?>
 											<ul>
-											<?php foreach($childMenu2 as $category3){ ?>
+											<?php foreach($childMenu2 as $category3): ?>
 												<span class="icon icon-right"></span>
 												<li class="item-content">
 													<div class="item-title"><a href="<?= $category3['url'] ?>" external><?= $category3['name'] ?></a></div>
 												</li>
 												
-											<?php } ?>
+											<?php endforeach; ?>
 											</ul>
-										<?php } ?>
+										<?php endif; ?>
 									</li>
-								<?php } ?>
+								<?php endforeach; ?>
 							</ul>
 							<?php //echo $category1['menu_custom'];  ?>
 									
-						<?php } ?>
+						<?php endif; ?>
 					</li>
-				<?php } ?>
+				<?php endforeach; ?>
 				</ul>
-			<?php } ?>
+			<?php endif; ?>
 		</div>
 		
 	</div>
@@ -88,48 +88,48 @@
 			<ul>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->homeUrl();  ?>" external>Home</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->homeUrl();  ?>" external><?= Yii::$service->page->translate->__('Home'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/account/index'); ?>" external>Account</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/account/index'); ?>" external><?= Yii::$service->page->translate->__('My Account'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('checkout/cart'); ?>" external>Shopping Cart</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('checkout/cart'); ?>" external><?= Yii::$service->page->translate->__('Shopping Cart'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/order'); ?>" external>My Order</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/order'); ?>" external><?= Yii::$service->page->translate->__('My Order'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/productfavorite'); ?>" external>My Favorite</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/productfavorite'); ?>" external><?= Yii::$service->page->translate->__('My Favorite'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('about-us'); ?>" external>About Us</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('about-us'); ?>" external><?= Yii::$service->page->translate->__('About Us'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/contacts'); ?>" external>Contact us</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('customer/contacts'); ?>" external><?= Yii::$service->page->translate->__('Contact Us'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('privacy-policy'); ?>" external>privacy policy</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('privacy-policy'); ?>" external><?= Yii::$service->page->translate->__('Privacy Policy'); ?></a></div>
 					</div>
 				</li>
 				<li class="item-content">
 					<div class="item-inner">
-						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('return-policy'); ?>" external>Return Policy</a></div>
+						<div class="item-title"><a href="<?= Yii::$service->url->getUrl('return-policy'); ?>" external><?= Yii::$service->page->translate->__('Return Policy'); ?></a></div>
 					</div>
 				</li>
 			</ul>

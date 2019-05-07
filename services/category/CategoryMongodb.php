@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -9,17 +10,52 @@
 
 namespace fecshop\services\category;
 
-use fecshop\models\mongodb\Category;
+use fecshop\services\Service;
 use Yii;
 
 /**
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
-class CategoryMongodb implements CategoryInterface
+class CategoryMongodb extends Service implements CategoryInterface
 {
     public $numPerPage = 20;
+    
+    protected $_categoryModelName = '\fecshop\models\mongodb\Category';
 
+    protected $_categoryModel;
+    
+    public function init()
+    {
+        parent::init();
+        list($this->_categoryModelName, $this->_categoryModel) = Yii::mapGet($this->_categoryModelName);
+    }
+    
+    /**
+     * 通过主键，得到Category对象。
+     */
+    public function getByPrimaryKey($primaryKey)
+    {
+        if ($primaryKey) {
+            return $this->_categoryModel->findOne($primaryKey);
+        } else {
+            return new $this->_categoryModelName;
+        }
+    }
+    
+    /**
+     * 通过url_key，得到Category对象。
+     */
+    public function getByUrlKey($urlKey)
+    {
+        if ($urlKey) {
+            $urlKey = "/".trim($urlKey, "/");
+            return $this->_categoryModel->findOne(['url_key' => $urlKey]);
+        } else {
+            return new $this->_categoryModelName;
+        }
+    }
+    
     /**
      * 返回主键。
      */
@@ -29,15 +65,21 @@ class CategoryMongodb implements CategoryInterface
     }
 
     /**
-     * 通过主键，得到Category对象。
+     * 得到分类激活状态的值
      */
-    public function getByPrimaryKey($primaryKey)
+    public function getCategoryEnableStatus()
     {
-        if ($primaryKey) {
-            return Category::findOne($primaryKey);
-        } else {
-            return new Category();
-        }
+        $model = $this->_categoryModel;
+        return $model::STATUS_ENABLE;
+    }
+
+    /**
+     * 得到分类在menu中显示的状态值
+     */
+    public function getCategoryMenuShowStatus()
+    {
+        $model = $this->_categoryModel;
+        return $model::MENU_SHOW;
     }
 
     /*
@@ -56,12 +98,12 @@ class CategoryMongodb implements CategoryInterface
      */
     public function coll($filter = '')
     {
-        $query = Category::find();
+        $query = $this->_categoryModel->find();
         $query = Yii::$service->helper->ar->getCollByFilter($query, $filter);
 
         return [
             'coll' => $query->all(),
-            'count'=> $query->count(),
+            'count'=> $query->limit(null)->offset(null)->count(),
         ];
     }
 
@@ -70,15 +112,15 @@ class CategoryMongodb implements CategoryInterface
      */
     public function collCount($filter = '')
     {
-        $query = Category::find();
+        $query = $this->_categoryModel->find();
         $query = Yii::$service->helper->ar->getCollByFilter($query, $filter);
 
         return $query->count();
     }
 
     /**
-     * @property $one|array , save one data . 分类数组
-     * @property $originUrlKey|string , 分类的在修改之前的url key.（在数据库中保存的url_key字段，如果没有则为空）
+     * @param $one|array , save one data . 分类数组
+     * @param $originUrlKey|string , 分类的在修改之前的url key.（在数据库中保存的url_key字段，如果没有则为空）
      * 保存分类，同时生成分类的伪静态url（自定义url），如果按照name生成的url或者自定义的urlkey存在，系统则会增加几个随机数字字符串，来增加唯一性。
      */
     public function save($one, $originUrlKey = 'catalog/category/index')
@@ -86,15 +128,15 @@ class CategoryMongodb implements CategoryInterface
         $currentDateTime = \fec\helpers\CDate::getCurrentDateTime();
         $primaryVal = isset($one[$this->getPrimaryKey()]) ? $one[$this->getPrimaryKey()] : '';
         if ($primaryVal) {
-            $model = Category::findOne($primaryVal);
+            $model = $this->_categoryModel->findOne($primaryVal);
             if (!$model) {
-                Yii::$service->helper->errors->add('Category '.$this->getPrimaryKey().' is not exist');
+                Yii::$service->helper->errors->add('Category {primaryKey} is not exist', ['primaryKey' => $this->getPrimaryKey()]);
 
-                return;
+                return false;
             }
             $parent_id = $model['parent_id'];
         } else {
-            $model = new Category();
+            $model = new $this->_categoryModelName;
             $model->created_at = time();
             $model->created_user_id = \fec\helpers\CUser::getCurrentUserId();
             $primaryVal = new \MongoDB\BSON\ObjectId();
@@ -105,14 +147,23 @@ class CategoryMongodb implements CategoryInterface
         if ($parent_id === '0') {
             $model['level'] = 1;
         } else {
-            $parent_model = Category::findOne($parent_id);
+            $parent_model = $this->_categoryModel->findOne($parent_id);
             if ($parent_level = $parent_model['level']) {
                 $model['level'] = $parent_level + 1;
             }
         }
         $model->updated_at = time();
         unset($one['_id']);
-
+        $one['status']    = (int)$one['status'];
+        $one['menu_show'] = (int)$one['menu_show'];
+        $allowMenuShowArr = [ $model::MENU_SHOW, $model::MENU_NOT_SHOW];
+        if (!in_array($one['menu_show'], $allowMenuShowArr)) {
+            $one['menu_show'] = $model::MENU_SHOW;
+        }
+        $allowStatusArr = [ $model::STATUS_ENABLE, $model::STATUS_DISABLE];
+        if (!in_array($one['status'], $allowStatusArr)) {
+            $one['status'] = $model::STATUS_ENABLE;
+        }
         $saveStatus = Yii::$service->helper->ar->save($model, $one);
         $originUrl = $originUrlKey.'?'.$this->getPrimaryKey() .'='. $primaryVal;
         $originUrlKey = isset($one['url_key']) ? $one['url_key'] : '';
@@ -121,40 +172,58 @@ class CategoryMongodb implements CategoryInterface
         $model->url_key = $urlKey;
         $model->save();
 
-        return true;
+        return $model;
     }
 
     /**
-     * @property $id | String  主键值
+     * @param $id | String  主键值
      * 通过主键值找到分类，并且删除分类在url rewrite表中的记录
      * 查看这个分类是否存在子分类，如果存在子分类，则删除所有的子分类，以及子分类在url rewrite表中对应的数据。
      */
-    public function remove($id)
+    public function remove($ids)
     {
-        if (!$id) {
-            Yii::$service->helper->errors->add('remove id is empty');
+        if (!$ids) {
+            Yii::$service->helper->errors->add('remove ids is empty');
 
             return false;
         }
+        if (is_array($ids) && !empty($ids)) {
+            $deleteAll = true;
+            foreach ($ids as $id) {
+                $model = $this->_categoryModel->findOne($id);
+                if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
+                    $url_key = $model['url_key'];
+                    Yii::$service->url->removeRewriteUrlKey($url_key);
+                    $model->delete();
+                    $this->removeChildCate($id);
+                } else {
+                    Yii::$service->helper->errors->add("Category Remove Errors:ID:{id} is not exist.", ['id' => $id]);
 
-        $model = Category::findOne($id);
-        if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
-            $url_key = $model['url_key'];
-            Yii::$service->url->removeRewriteUrlKey($url_key);
-            $model->delete();
-            $this->removeChildCate($id);
+                    $deleteAll = false;
+                }
+            }
+            return $deleteAll;
         } else {
-            Yii::$service->helper->errors->add("Category Remove Errors:ID:$id is not exist.");
+            $id = $ids;
+            //echo $id;exit;
+            $model = $this->_categoryModel->findOne($id);
+            if (isset($model[$this->getPrimaryKey()]) && !empty($model[$this->getPrimaryKey()])) {
+                $url_key = $model['url_key'];
+                Yii::$service->url->removeRewriteUrlKey($url_key);
+                $model->delete();
+                $this->removeChildCate($id);
+            } else {
+                Yii::$service->helper->errors->add("Category Remove Errors:ID:{id} is not exist." , ['id' => $id]);
 
-            return false;
+                return false;
+            }
         }
-
         return true;
     }
 
     protected function removeChildCate($id)
     {
-        $data = Category::find()->where(['parent_id'=>$id])->all();
+        $data = $this->_categoryModel->find()->where(['parent_id'=>$id])->all();
         if (!empty($data)) {
             foreach ($data as $one) {
                 $idVal = (string) $one['_id'];
@@ -173,7 +242,7 @@ class CategoryMongodb implements CategoryInterface
      *  数组中只有  id  name(default language), child(子分类) 等数据。
      *  目前此函数仅仅用于后台对分类的编辑使用。 appadmin.
      */
-    public function getTreeArr($rootCategoryId = '', $lang = '')
+    public function getTreeArr($rootCategoryId = '', $lang = '', $appserver=false, $level = 1)
     {
         $arr = [];
         if (!$lang) {
@@ -184,7 +253,7 @@ class CategoryMongodb implements CategoryInterface
         } else {
             $where = ['parent_id' => $rootCategoryId];
         }
-        $categorys = Category::find()->asArray()->where($where)->all();
+        $categorys = $this->_categoryModel->find()->asArray()->where($where)->all();
         //var_dump($categorys);exit;
         $idKey = $this->getPrimaryKey();
         if (!empty($categorys)) {
@@ -192,12 +261,16 @@ class CategoryMongodb implements CategoryInterface
                 $idVal = (string) $cate[$idKey];
                 $arr[$idVal] = [
                     $idKey    => $idVal,
+                    'level'   => $level,
                     'name'    => Yii::$service->fecshoplang->getLangAttrVal($cate['name'], 'name', $lang),
                 ];
+                if ($appserver) {
+                    $arr[$idVal]['url'] = '/catalog/category/'.$idVal;
+                }
                 //echo $arr[$idVal]['name'];
 
                 if ($this->hasChildCategory($idVal)) {
-                    $arr[$idVal]['child'] = $this->getTreeArr($idVal, $lang);
+                    $arr[$idVal]['child'] = $this->getTreeArr($idVal, $lang, $appserver, $level+1);
                 }
             }
         }
@@ -207,7 +280,7 @@ class CategoryMongodb implements CategoryInterface
 
     protected function hasChildCategory($idVal)
     {
-        $one = Category::find()->asArray()->where(['parent_id'=>$idVal])->one();
+        $one = $this->_categoryModel->find()->asArray()->where(['parent_id'=>$idVal])->one();
         if (!empty($one)) {
             return true;
         }
@@ -216,7 +289,7 @@ class CategoryMongodb implements CategoryInterface
     }
 
     /**
-     * @property $parent_id|string
+     * @param $parent_id|string
      * 通过当前分类的parent_id字段（当前分类的上级分类id），得到所有的上级信息数组。
      * 里面包含的信息为：name，url_key。
      * 譬如一个分类为三级分类，将他的parent_id传递给这个函数，那么，他返回的数组信息为[一级分类的信息（name，url_key），二级分类的信息（name，url_key）].
@@ -225,18 +298,18 @@ class CategoryMongodb implements CategoryInterface
     public function getAllParentInfo($parent_id)
     {
         if ($parent_id) {
-            $parentModel = Category::findOne($parent_id);
+            $parentModel = $this->_categoryModel->findOne($parent_id);
             $parent_parent_id = $parentModel['parent_id'];
             $parent_category = [];
             if ($parent_parent_id !== '0') {
                 $parent_category[] = [
-                    'name' => $parentModel['name'],
+                    'name'   => $parentModel['name'],
                     'url_key'=>$parentModel['url_key'],
                 ];
                 $parent_category = array_merge($this->getAllParentInfo($parent_parent_id), $parent_category);
             } else {
                 $parent_category[] = [
-                    'name' => $parentModel['name'],
+                    'name'   => $parentModel['name'],
                     'url_key'=>$parentModel['url_key'],
                 ];
             }
@@ -250,7 +323,7 @@ class CategoryMongodb implements CategoryInterface
         if ($parent_id === '0') {
             return [];
         }
-        $category = Category::find()->asArray()->where(['_id' => new \MongoDB\BSON\ObjectId($parent_id)])->one();
+        $category = $this->_categoryModel->find()->asArray()->where(['_id' => new \MongoDB\BSON\ObjectId($parent_id)])->one();
         if (isset($category['_id']) && !empty($category['_id'])) {
             $currentUrlKey = $category['url_key'];
             $currentName = $category['name'];
@@ -258,9 +331,9 @@ class CategoryMongodb implements CategoryInterface
 
             $currentCategory[] = [
                 '_id'        => $currentId,
-                'name'        => $currentName,
+                'name'       => $currentName,
                 'url_key'    => $currentUrlKey,
-                'parent_id'    => $category['parent_id'],
+                'parent_id'  => $category['parent_id'],
             ];
             $parentCategory = $this->getParentCategory($category['parent_id']);
 
@@ -271,8 +344,8 @@ class CategoryMongodb implements CategoryInterface
     }
 
     /**
-     * @property $category_id|string  当前的分类_id
-     * @property $parent_id|string  当前的分类上级id parent_id
+     * @param $category_id|string  当前的分类_id
+     * @param $parent_id|string  当前的分类上级id parent_id
      * 这个功能是点击分类后，在产品分类页面侧栏的子分类菜单导航，详细的逻辑如下：
      * 1.如果level为一级，那么title部分为当前的分类，子分类为一级分类下的二级分类
      * 2.如果level为二级，那么将所有的二级分类列出，当前的二级分类，会列出来当前二级分类对应的子分类
@@ -284,15 +357,15 @@ class CategoryMongodb implements CategoryInterface
     {
         $returnData = [];
         $primaryKey = $this->getPrimaryKey();
-        $currentCategory = Category::findOne($category_id);
+        $currentCategory = $this->_categoryModel->findOne($category_id);
         $currentUrlKey = $currentCategory['url_key'];
         $currentName = $currentCategory['name'];
         $currentId = (string) $currentCategory['_id'];
         $returnData['current'] = [
             '_id'        => $currentId,
-            'name'        => $currentName,
+            'name'       => $currentName,
             'url_key'    => $currentUrlKey,
-            'parent_id'    => $currentCategory['parent_id'],
+            'parent_id'  => $currentCategory['parent_id'],
         ];
         if ($currentCategory['parent_id']) {
             $allParent = $this->getParentCategory($currentCategory['parent_id']);
@@ -315,8 +388,10 @@ class CategoryMongodb implements CategoryInterface
         $_id = $category['_id'];
         $name = $category['name'];
         $url_key = $category['url_key'];
-        $cate = Category::find()->asArray()->where([
+        $cate = $this->_categoryModel->find()->asArray()->where([
             'parent_id' => $_id,
+            'status' => $this->getCategoryEnableStatus(),
+            'menu_show'  => $this->getCategoryMenuShowStatus(),
         ])->all();
         if (is_array($cate) && !empty($cate)) {
             foreach ($cate as $one) {
@@ -343,8 +418,10 @@ class CategoryMongodb implements CategoryInterface
                 $category_id = $category['_id'];
                 $parent_id = $category['parent_id'];
                 if ($parent_id) {
-                    $cate = Category::find()->asArray()->where([
+                    $cate = $this->_categoryModel->find()->asArray()->where([
                         'parent_id' => $parent_id,
+                        'status' => $this->getCategoryEnableStatus(),
+                        'menu_show'  => $this->getCategoryMenuShowStatus(),
                     ])->all();
                     //var_dump($cate);
                     //echo '$$$$$$$$$$';
@@ -382,9 +459,11 @@ class CategoryMongodb implements CategoryInterface
     protected function getChildCate($category_id)
     {
         //echo $category_id;
-        $data = Category::find()->asArray()->where([
-                        'parent_id' => $category_id,
-                    ])->all();
+        $data = $this->_categoryModel->find()->asArray()->where([
+            'parent_id' => $category_id,
+            'status' => $this->getCategoryEnableStatus(),
+            'menu_show'  => $this->getCategoryMenuShowStatus(),
+        ])->all();
         $arr = [];
         if (is_array($data) && !empty($data)) {
             foreach ($data as $one) {

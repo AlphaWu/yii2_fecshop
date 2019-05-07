@@ -7,7 +7,7 @@
  * @license http://www.fecshop.com/license/
  */
 
-namespace fecshop\app\appfront\modules\checkout\block\cart;
+namespace fecshop\app\appfront\modules\Checkout\block\cart;
 
 use Yii;
 
@@ -21,12 +21,60 @@ class Index
     {
         $this->initHead();
         $currency_info = Yii::$service->page->currency->getCurrencyInfo();
-
+        $cart_info = $this->getCartInfo(false);
+        $this->breadcrumbs(Yii::$service->page->translate->__('Checkout Cart'));
         return [
-            'cart_info' => $this->getCartInfo(),
-            'currency_info' => $currency_info,
+            'cart_info'         => $cart_info,
+            'currency_info'     => $currency_info,
+            'trace_cart_info'   => $this->getTraceCartInfo($cart_info),
         ];
     }
+    
+    // 面包屑导航
+    protected function breadcrumbs($name)
+    {
+        if (Yii::$app->controller->module->params['checkout_cart_breadcrumbs']) {
+            Yii::$service->page->breadcrumbs->addItems(['name' => $name]);
+        } else {
+            Yii::$service->page->breadcrumbs->active = false;
+        }
+    }
+    /**
+     * @param $cart_info | Array, example data:
+        [
+            {
+                "sku":"grxjy56002622",
+                "qty":1,
+                "price":35.52
+            },
+            {
+                "sku":"grxjy5606622",
+                "qty":4,
+                "price":75.11
+            }
+        ]
+     * @return string ， json数组字符串
+     * 通过$cart_info，得到用于追踪的字符串。
+     */
+    public function getTraceCartInfo($cart_info){
+        if (Yii::$service->page->trace->traceJsEnable) {
+            if (is_array($cart_info['products']) && !empty($cart_info['products'])) {
+                $arr = [];
+                foreach ($cart_info['products'] as $product) {
+                    $arr[] = [
+                        'sku'   => $product['sku'],
+                        'qty'   => (int)$product['qty'],
+                        'price' => $product['base_product_price'],
+                    ];
+                }
+                if (!empty($arr)) {
+                    return json_encode($arr);
+                }
+            }
+        }
+        return '';
+    }
+
 
     /** @return data example
      *	[
@@ -54,7 +102,7 @@ class Index
      */
     public function getCartInfo()
     {
-        $cart_info = Yii::$service->cart->getCartInfo();
+        $cart_info = Yii::$service->cart->getCartInfo(false);
 
         if (isset($cart_info['products']) && is_array($cart_info['products'])) {
             foreach ($cart_info['products'] as $k=>$product_one) {

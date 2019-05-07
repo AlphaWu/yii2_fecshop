@@ -20,7 +20,6 @@ class Index
     protected $numPerPage = 10;
     protected $pageNum;
     protected $orderBy;
-    protected $customer_id;
     protected $_page = 'p';
 
     /**
@@ -28,10 +27,6 @@ class Index
      */
     public function initParam()
     {
-        if (!Yii::$app->user->isGuest) {
-            $identity = Yii::$app->user->identity;
-            $this->customer_id = $identity;
-        }
         $this->pageNum = (int) Yii::$app->request->get('p');
         $this->pageNum = ($this->pageNum >= 1) ? $this->pageNum : 1;
         $this->orderBy = ['created_at' => SORT_DESC];
@@ -41,13 +36,15 @@ class Index
     {
         $this->initParam();
         $return_arr = [];
-        if ($this->customer_id) {
+        if (!Yii::$app->user->isGuest) {
+            $identity = Yii::$app->user->identity;
+            $customer_id = $identity->id;
             $filter = [
                 'numPerPage'    => $this->numPerPage,
                 'pageNum'        => $this->pageNum,
                 'orderBy'        => $this->orderBy,
                 'where'            => [
-                    ['customer_id' => $this->customer_id],
+                    ['customer_id' => $customer_id],
                 ],
                 'asArray' => true,
             ];
@@ -58,8 +55,18 @@ class Index
             $pageToolBar = $this->getProductPage($count);
             $return_arr['pageToolBar'] = $pageToolBar;
         }
-
+        $this->breadcrumbs(Yii::$service->page->translate->__('Customer Order'));
         return $return_arr;
+    }
+    
+    // 面包屑导航
+    protected function breadcrumbs($name)
+    {
+        if (Yii::$app->controller->module->params['customer_order_breadcrumbs']) {
+            Yii::$service->page->breadcrumbs->addItems(['name' => $name]);
+        } else {
+            Yii::$service->page->breadcrumbs->active = false;
+        }
     }
 
     protected function getProductPage($countTotal)

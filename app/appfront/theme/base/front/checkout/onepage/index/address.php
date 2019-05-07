@@ -1,3 +1,12 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <?php  $address_list = $parentThis['address_list'];   ?>
 <?php  $cart_address_id = $parentThis['cart_address_id'];   ?>
 <?php  $country_select = $parentThis['country_select'];   ?>
@@ -7,11 +16,10 @@
 <div id="billing_address">		
 	<ul>
 		<li>
-			<p class="onestepcheckout-numbers onestepcheckout-numbers-1"><?= Yii::$service->page->translate->__('Billing address');?></p>
+			<p class="onestepcheckout-numbers onestepcheckout-numbers-1"><?= Yii::$service->page->translate->__('Shipping Address');?></p>
 		</li>
 		<li>
 			<div>
-			
 				<ul id="billing_address_list" class="billing_address_list_new" style="">			
 					<li class="clearfix">
 						<div class="input-box input-firstname">
@@ -33,7 +41,7 @@
 							</div>
 						</div>
 					</li>
-					<li>
+					<li class="clearfix">
 						<div style="width:100%;" class="input-box input-telephone">
 							<label for="billing:telephone"><?= Yii::$service->page->translate->__('Telephone');?> <span class="required">*</span></label>
 							<input style="width:83%;" value="<?= $cart_address['telephone'] ?>" id="billing:telephone" class="required-entry input-text" title="Telephone" name="billing[telephone]" type="text">
@@ -79,13 +87,13 @@
 						</div>
 						
 					</li>
-					<?php if(!Yii::$app->user->isGuest){  ?>
+					<?php if(!Yii::$app->user->isGuest):  ?>
 					<!--
 					<li class="control">
 						<input class="save_in_address_book checkbox" id="billing:save_in_address_book" title="Save in address book" value="1" name="billing[save_in_address_book]" checked="checked" type="checkbox"><label for="billing:save_in_address_book">Save in address book</label>
 					</li>  
 					-->
-					<?php }else{ ?>
+					<?php else: ?>
 					<li class="clearfix">
 						<div class="input-box">
 							<input value="1" name="create_account" id="id_create_account" type="checkbox">
@@ -105,10 +113,9 @@
 							<input name="billing[confirm_password]" title="Confirm Password" id="billing:confirm_password" value="" class="validate-password input-text customer_confirm_password" type="password">
 						</div>
 					</li>
-					<?php }  ?>
+					<?php endif;  ?>
 				</ul>							
 			</div>
 		</li>
-		
 	</ul>
 </div>

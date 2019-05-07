@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -11,26 +12,35 @@ namespace fecshop\services\product\viewLog;
 
 use fec\helpers\CDate;
 use fec\helpers\CUser;
-use fecshop\models\mongodb\product\ViewLog as MongodbViewLog;
+//use fecshop\models\mongodb\product\ViewLog as MongodbViewLog;
 use fecshop\services\Service;
 
 /**
+ * Product viewlog Mongodb services
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class Mongodb extends Service
 {
     public $collection;
+
     public $_defaultCollection = 'log_product_view';
+
     public $_maxProductCount = 10;
+    
+    protected $_logModelName = '\fecshop\models\mongodb\product\ViewLog';
+
+    protected $_logModel;
 
     // init
     public function init()
     {
+        parent::init();
+        list($this->_logModelName, $this->_logModel) = \Yii::mapGet($this->_logModelName);
         if (!$this->collection) {
             $this->collection = $this->_defaultCollection;
         }
-        MongodbViewLog::setCurrentCollectionName($this->collection);
+        $this->_logModel->setCurrentCollectionName($this->collection);
     }
 
     /**
@@ -47,9 +57,9 @@ class Mongodb extends Service
         if (!$user_id) {
             return;
         }
-        $coll = MongodbViewLog::find()->where([
-                'user_id' => $user_id,
-            ])
+        $coll = $this->_logModel->find()->where([
+            'user_id' => $user_id,
+        ])
             ->asArray()
             ->orderBy(['date_time' => SORT_DESC])
             ->limit($count)
@@ -80,7 +90,7 @@ class Mongodb extends Service
             return;
         }
 
-        $MongodbViewLog = MongodbViewLog::getCollection();
-        $MongodbViewLog->save($arr);
+        $mongodbViewLog = $this->_logModel->getCollection();
+        $mongodbViewLog->save($arr);
     }
 }

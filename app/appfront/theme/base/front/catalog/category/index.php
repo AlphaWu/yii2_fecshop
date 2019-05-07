@@ -21,7 +21,7 @@
 				<?=  $description ?>
 			</div>
 			<div class="panelBar">
-				<?php  if(is_array($products) && !empty($products)){ ?>
+				<?php  if(is_array($products) && !empty($products)): ?>
 					<?php
 						$parentThis = [
 							'query_item' => $query_item,
@@ -33,15 +33,18 @@
 						$toolbar = Yii::$service->page->widget->renderContent('category_toolbar',$config,$parentThis);
 						echo $toolbar;
 					?>
-				<?php } ?>
+				<?php endif; ?>
 			</div>
 			<div class="category_product">
-				<?php  if(is_array($products) && !empty($products)){ ?>
-					<?php $i = 0;  foreach($products as $product){ ?>
-						<?php  if($i%$count == 0){ ?>
+				<?php  if(is_array($products) && !empty($products)): ?>
+					<?php $i = 0;  foreach($products as $product): ?>
+						<?php  if($i%$count == 0): ?>
 						<ul>
-						<?php  } ?>
+						<?php  endif; ?>
 							<li>
+                                <div style="display:none">
+                                    <?= $currentOff = Yii::$service->product->price->currentOff; // 通过这个函数也可以得到特价折扣值  OFF ?>
+                                </div>
 								<div class="c_img">
 									<a href="<?= $product['url'] ?>">
 										<img class="js_lazy" src="<?= Yii::$service->image->getImgUrl('images/lazyload.gif');   ?>" data-original="<?= Yii::$service->product->image->getResize($product['image'],[230,230],false) ?>"  />
@@ -64,26 +67,26 @@
 									echo Yii::$service->page->widget->renderContent('category_product_price',$config);
 								?>
 							</li>
-						<?php  if($i%$count == $end){ ?>
+						<?php  if($i%$count == $end): ?>
 						</ul>
-						<?php  } ?>
+						<?php  endif; ?>
 						<?php  $i++; ?>
-					<?php  }  ?>
-					<?php  if($i%$count != $end){ ?>
+					<?php  endforeach;  ?>
+					<?php  if($i%$count != $end): ?>
 						</ul>
-						<?php  } ?>
-				<?php  }  ?>
+					<?php  endif; ?>
+				<?php  endif;  ?>
 			</div>
 			<div class="clear"></div>
 			<div class="panelBar">
-				<?php  if(is_array($products) && !empty($products)){ ?>
+				<?php  if(is_array($products) && !empty($products)): ?>
 					<?php echo $toolbar; ?>
-				<?php  }  ?>
+				<?php  endif;  ?>
 			</div>
 		</div>
 	</div>
 	<div class="col-left ">
-		
+
 		<?php
 			# Refind By
 			$parentThis = [
@@ -129,9 +132,9 @@
 	<div class="clear"></div>
 </div>
 <script>
-<?php $this->beginBlock('category_product_filter') ?>  
+<?php $this->beginBlock('category_product_filter') ?>
 $(document).ready(function(){
-	$(".product_sort").change(function(){	
+	$(".product_sort").change(function(){
 		url = $(this).find("option:selected").attr('url');
 		window.location.href = url;
 	});
@@ -139,7 +142,7 @@ $(document).ready(function(){
 		url = $(this).find("option:selected").attr('url');
 		window.location.href = url;
 	});
-	
+
 	$(".filter_attr_info a").click(function(){
 		if($(this).hasClass("checked")){
 			$(this).removeClass("checked");
@@ -149,6 +152,7 @@ $(document).ready(function(){
 		}
 	});
 });
-<?php $this->endBlock(); ?>  
-</script>  
+<?php $this->endBlock(); ?>
+</script>
 <?php $this->registerJs($this->blocks['category_product_filter'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
+<?= Yii::$service->page->trace->getTraceCategoryJsCode($name_default_lang)  ?>

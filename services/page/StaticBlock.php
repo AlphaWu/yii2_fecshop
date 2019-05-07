@@ -1,5 +1,6 @@
 <?php
-/**
+
+/*
  * FecShop file.
  *
  * @link http://www.fecshop.com/
@@ -14,14 +15,14 @@ use Yii;
 use yii\base\InvalidValueException;
 
 /**
- * Breadcrumbs services.
+ * Page StaticBlock services.废弃，staticBlock在Yii::$service->cms->staticBlock中实现
  * @author Terry Zhao <2358269014@qq.com>
  * @since 1.0
  */
 class StaticBlock extends Service
 {
     /**
-     * @property  $key|array
+     * @param  $key|array
      */
     public function getByKey($key, $lang = '')
     {
@@ -34,7 +35,7 @@ class StaticBlock extends Service
     }
 
     /**
-     *	@property $_id | Int
+     *	@param $_id | Int
      *  get StaticBlock one data by $_id.
      */
     public function getById($_id)
@@ -42,7 +43,7 @@ class StaticBlock extends Service
     }
 
     /**
-     *	@property $filter | Array
+     *	@param $filter | Array
      *  get StaticBlock collections by $filter .
      */
     public function getStaticBlockList($filter)

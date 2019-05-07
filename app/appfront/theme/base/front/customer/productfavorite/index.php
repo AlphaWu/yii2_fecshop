@@ -1,7 +1,16 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+use fec\helpers\CRequest; 
+?>
 <div class="main container two-columns-left">
-	
+    <?= Yii::$service->page->widget->render('breadcrumbs',$this); ?>
 	<div class="col-main account_center">
-		
 		<div class="std">
 			<div style="margin:4px 0 0">
 				<div class="page-title">
@@ -9,9 +18,9 @@
 				</div>
 				<div style="width:100%;min-height:500px;">
 					<div style="width:100%;">
-						<?php if(is_array($coll) && !empty($coll)){  ?>
+						<?php if(is_array($coll) && !empty($coll)):  ?>
 						<ul id="review_description" style="padding:0px;">
-							<?php  foreach($coll as $one){  ?>
+							<?php  foreach($coll as $one):  ?>
 							<?php  $main_img = $one['image']['main']['image'];  ?>
 							<li style="width:100%;min-height:160px;">
 								<div class="review_description_left">
@@ -40,7 +49,7 @@
 											?>
 										</div>
 										<div class="favorite-Operation" style="display:inline-block;float:right; margin-top: 0px;">
-											<a href="<?= Yii::$service->url->getUrl('customer/productfavorite',['type'=>'remove','favorite_id' => $one['favorite_id']]); ?>">
+											<a href='javascript:doPost("<?= Yii::$service->url->getUrl('customer/productfavorite') ?>", {"type":"remove", "favorite_id":"<?= $one['favorite_id'] ?>", "<?= CRequest::getCsrfName() ?>": "<?= CRequest::getCsrfValue() ?>" })' >
 												<?= Yii::$service->page->translate->__('Delete');?>
 											</a>
 										</div>
@@ -49,19 +58,18 @@
 											<?= Yii::$service->page->translate->__('Favorite Date:');?><?= date('Y-m-d H:i:s',$one['updated_at']) ?>
 										</div>
 									</div>	
-									
 								</div>
 							</li>
-							<?php  }  ?>
+							<?php  endforeach;  ?>
 						</ul>
-						<?php  }else{  ?>
+						<?php  else:  ?>
 							<?= Yii::$service->page->translate->__('You have no items in your favorite.');?>
-						<?php  } ?>
-						<?php if($pageToolBar){ ?>
+						<?php  endif; ?>
+						<?php if($pageToolBar): ?>
 						<div class="pageToolbar">
 							<label class="title">Page:</label><?= $pageToolBar ?>
 						</div>
-						<?php } ?>
+						<?php endif; ?>
 					</div>
 				</div>
 			</div>

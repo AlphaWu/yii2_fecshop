@@ -1,17 +1,27 @@
+<?php
+/**
+ * FecShop file.
+ *
+ * @link http://www.fecshop.com/
+ * @copyright Copyright (c) 2016 FecShop Software LLC
+ * @license http://www.fecshop.com/license/
+ */
+?>
 <div class="main container one-column">
 	<div class="col-main">
+		<?= Yii::$service->page->widget->render('breadcrumbs',$this); ?>
 		<div class="product_page">
 			<div class="product_view">
 				<input type="hidden" class="product_view_id" value="<?=  $_id ?>">
 				<input type="hidden" class="sku" value="<?= $sku; ?>" />
 				<input type="hidden" class="product_csrf" name="" value="" />
-				<div class="product_info">
+				<div class="product_info" id="product_page_info">
 					<h1><?= $name; ?></h1>
 					<div>
 						<div class="rbc_cold">
 							<span>
 								<span class="average_rating"><?= Yii::$service->page->translate->__('Average rating'); ?> :</span>
-								<span class="review_star review_star_<?= $reviw_rate_star_average ?>" style="font-weight:bold;" itemprop="average"></span>  
+								<span class="review_star review_star_<?= round($reviw_rate_star_average) ?>" style="font-weight:bold;" itemprop="average"></span>  
 								
 								<a rel="nofollow" href="#text-reviews">
 									(<span itemprop="count"><?= $review_count ?> <?= Yii::$service->page->translate->__('reviews'); ?></span>)
@@ -20,7 +30,6 @@
 						</div>
 					</div>
 					<div class="item_code"><?= Yii::$service->page->translate->__('Item Code:'); ?> <?= $sku; ?></div>
-					
 					<div class="price_info">
 						<?php # 价格部分
 							$priceView = [
@@ -71,6 +80,9 @@
 							<div class="label"><?= Yii::$service->page->translate->__('Qty:'); ?></div>
 							<div class="rg">
 								<input type="text" name="qty" class="qty" value="1" />
+                                <?php if ($package_number >= 2) { ?>
+                                X <?= $package_number ?> items
+                                <?php } ?>
 							</div>
 							<div class="clear"></div>
 						</div>
@@ -80,7 +92,7 @@
 							
 							<div class="myFavorite_nohove" id="myFavorite">
 								<i></i>
-								<a href="javascript:void(0)" url="<?= Yii::$service->url->getUrl('catalog/favoriteproduct/add',['product_id'=>$_id]); ?>" class="addheart" id="divMyFavorite" rel="nofollow" >
+								<a href="javascript:void(0)" url="<?= Yii::$service->url->getUrl('catalog/favoriteproduct/add'); ?>"  product_id="<?= $_id?>" class="addheart" id="divMyFavorite" rel="nofollow" >
 									<?= Yii::$service->page->translate->__('Add to Favorites'); ?>
 								</a>				
 							</div>
@@ -108,7 +120,7 @@
 							];
 							$imageParam = [
 								'media_size' => $media_size,
-								'image' => $image,
+								'image' => $image_thumbnails,
 								'productImgMagnifier' => $productImgMagnifier,
 							];
 						?>
@@ -129,15 +141,10 @@
 					];
 				?>
 				<?= Yii::$service->page->widget->render($buyAlsoBuyView,$buyAlsoBuyParam); ?>
-			
 			</div>
 			
 			<div class="clear"></div>
 			<div class="product_description_info">
-				
-				
-				
-				
 				<div class="nav" id="nav-container">  
 					<ul id="nav-box">
 						<li  class="nav_tab cur" rel="description"><?= Yii::$service->page->translate->__('Description'); ?></li>  
@@ -148,7 +155,26 @@
 				</div>  
 				<div id="text">  
 					<div class="text-description" style="">
+                        <?php if(is_array($groupAttrArr)): ?>
+                            <table>
+                            <?php foreach($groupAttrArr as $k => $v): ?>
+                                <tr><td><?= $k ?></td><td><?= $v ?></td></tr>
+                            <?php endforeach; ?>
+                            </table>
+                            <br/>
+                        <?php endif; ?>
+                        
 						<?= $description; ?>
+                        
+                        <div class="img-section">
+                            <?php   if(is_array($image_detail)):  ?>
+                                <?php foreach($image_detail as $image_detail_one): ?>
+                                    <br/>
+                                    <img class="js_lazy" src="<?= Yii::$service->image->getImgUrl('images/lazyload.gif');   ?>" data-original="<?= Yii::$service->product->image->getUrl($image_detail_one['image']);  ?>"  />
+                                    
+                                <?php  endforeach;  ?>
+                            <?php  endif;  ?>
+                        </div>
 					</div>  
 					<div class="text-reviews" id="text-reviews" style="">
 						<?php # review部分。
@@ -158,7 +184,9 @@
 								'product_id' 	=> $_id,
 								'spu'			=> $spu,
 							];
-							
+							$reviewParam['reviw_rate_star_info'] = $reviw_rate_star_info;
+                            $reviewParam['review_count'] = $review_count;
+                            $reviewParam['reviw_rate_star_average'] = $reviw_rate_star_average;
 						?>
 						<?= Yii::$service->page->widget->render($reviewView,$reviewParam); ?>
 					</div>  
@@ -228,7 +256,9 @@
 				$data['custom_option'] 	= custom_option_json;
 				$data['product_id'] 	= "<?= $_id ?>";
 				$data['qty'] 			= qty;
-				$data[csrfName] 		= csrfVal;
+				if (csrfName && csrfVal) {
+					$data[csrfName] 		= csrfVal;
+				}
 				jQuery.ajax({
 					async:true,
 					timeout: 6000,
@@ -259,9 +289,17 @@
 			if($(this).hasClass('act')){
 				alert("<?= Yii::$service->page->translate->__('You already favorite this product'); ?>");
 			}else{
+                $(this).addClass('act');
 				url = $(this).attr('url');
-				$(this).addClass('act');
-				window.location.href = url;
+                product_id = $(this).attr('product_id');
+                csrfName = $(".product_csrf").attr("name");
+				csrfVal  = $(".product_csrf").val();
+                param = {};
+                param["product_id"] = product_id;
+				if (csrfName && csrfVal) {
+					param[csrfName] = csrfVal;
+				}
+                doPost(url, param);
 			}
 	   });
 	   // 改变个数的时候，价格随之变动
@@ -319,7 +357,6 @@
 	<?php $this->endBlock(); ?> 
 	<?php $this->registerJs($this->blocks['add_to_cart'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
 
-	
 	//tab 切换js
 	<?php $this->beginBlock('product_info_tab') ?> 
 	var navContainer = document.getElementById("nav-container");  
@@ -364,7 +401,7 @@
 
 			interval = setInterval(function(){  
 				if(scroll.scrollTop + a<=textChild[self.index].offsetTop){  
-					scroll.scrollTop += 40;  
+					scroll.scrollTop += 1500;  
 					if(scroll.scrollTop + a>=textChild[self.index].offsetTop){  
 						scroll.scrollTop = textChild[self.index].offsetTop-a;  
 						clearInterval(interval);  
@@ -376,11 +413,11 @@
 						clearInterval(interval);  
 					}  
 				}  
-			},40);  
+			},4);  
 		};  
 	}  
 	<?php $this->endBlock(); ?>  
 	<?php $this->registerJs($this->blocks['product_info_tab'],\yii\web\View::POS_END);//将编写的js代码注册到页面底部 ?>
 </script> 
-  
+<?= Yii::$service->page->trace->getTraceProductJsCode($sku)  ?>
  
